@@ -20,6 +20,15 @@ function setCookieMonster(setAll) {
 	}
 
 	document.cookie = "cmnstr=" + optionString + "; path=/; max-age=31536000; domain=." + host;
+
+	if (typeof window.updateGoogleConsent === 'function') {
+		window.updateGoogleConsent();
+	}
+
+	document.dispatchEvent(new CustomEvent('cookieConsentChanged', {
+		detail: { categories: optionValues }
+	}));
+
 	var cmnstrBanner = document.querySelector(".cmnstr");
 	cmnstrBanner.parentNode.removeChild(cmnstrBanner);
 	location.reload();

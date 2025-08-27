@@ -287,6 +287,12 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
                     $this->renderGTM() . '</head>',
                     $event->return
                 );
+
+                $gtmBody = $this->renderGTMBody();
+                $regex = '/(<body[^>]*>)/m';
+                $replace = '$1' . $gtmBody;
+                $event->return = preg_replace($regex, $replace, $event->return);
+
             } else {
                 $event->return = str_replace(
                     '</head>',
@@ -299,36 +305,183 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
         $this->addCustomTags($event);
     }
 
+    private function renderConsentInit()
+    {
+        return <<<CONSENT_INIT
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+
+gtag('consent', 'default', {
+    'analytics_storage': 'denied',
+    'ad_storage': 'denied',
+    'ad_personalization': 'denied',
+    'ad_user_data': 'denied',
+    'functionality_storage': 'denied',
+    'security_storage': 'granted'
+});
+</script>
+CONSENT_INIT;
+    }
+
+    private function renderConsentUpdate($isGTM = false)
+    {
+        $updateScript = <<<CONSENT_UPDATE
+<script>
+(function () {
+    function getCookie(name) {
+        const value = '; ' + document.cookie;
+        const parts = value.split('; ' + name + '=');
+        if (parts.length === 2) return parts.pop().split(';').shift();
+    }
+    
+    function getConsentCategories() {
+        try {
+            const raw = getCookie('cmnstr');
+            if (!raw) return null;
+            const parsed = JSON.parse(raw);
+            if (typeof parsed !== 'object' || parsed === null) return null;
+            return parsed;
+        } catch (e) {
+            console.warn('Failed to parse consent cookie:', e);
+            return null;
+        }
+    }
+    
+    function updateConsent() {
+        const consented = getConsentCategories();
+        if (!consented) return;
+        
+        let updatedConsent = {
+            'ad_storage': 'denied',
+            'analytics_storage': 'denied', 
+            'ad_user_data': 'denied',
+            'ad_personalization': 'denied',
+            'functionality_storage': 'denied',
+            'security_storage': 'granted'
+        };
+        
+        if (consented.statistics === true) {
+            updatedConsent.analytics_storage = 'granted';
+            updatedConsent.functionality_storage = 'granted';
+        }
+        
+        if (consented.ads === true) {
+            updatedConsent.ad_storage = 'granted';
+            updatedConsent.ad_user_data = 'granted';
+            updatedConsent.ad_personalization = 'granted';
+        }
+        
+        //console.log('Updating Google consent:', updatedConsent);
+CONSENT_UPDATE;
+
+        if ($isGTM) {
+            $updateScript .= <<<GTM_DATALAYER
+        
+        window.dataLayer = window.dataLayer || [];
+        window.dataLayer.push({
+            'event': 'consent_update',
+            'consent_update': updatedConsent
+        });
+        
+        if (typeof gtag === 'function') {
+            gtag('consent', 'update', updatedConsent);
+        }
+GTM_DATALAYER;
+        } else {
+            $updateScript .= <<<GA_GTAG
+        
+        if (typeof gtag === 'function') {
+            gtag('consent', 'update', updatedConsent);
+        } else {
+            console.warn('gtag function not available for consent update');
+        }
+GA_GTAG;
+        }
+
+        $updateScript .= <<<CONSENT_CLOSE
+    }
+    
+    updateConsent();
+    
+    window.updateGoogleConsent = updateConsent;
+    
+    document.addEventListener('cookieConsentChanged', function(event) {
+        console.log('Consent changed event received');
+        setTimeout(updateConsent, 50);
+    });
+    
+})();
+</script>
+CONSENT_CLOSE;
+
+        return $updateScript;
+    }
+
     public function renderGATracking()
     {
-        $out = <<<TRACKING
-    <!-- Global Site Tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id={$this->ga_property_id}"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        
-        gtag('consent', 'default', {
-              'analytics_storage': 'denied',
-              'ad_storage': 'denied',
-              'ad_personalization': 'denied',
-              'ad_user_data': 'denied',
-              'functionality_storage': 'denied',
-              'security_storage': 'granted'
-            });
-        
-        gtag('consent', 'update', {
-             'ad_storage': $this->allowAds ? 'granted' : 'denied',
-             'analytics_storage': $this->allowTracking ? 'granted' : 'denied',
-        })
-        
-        gtag('js', new Date());
-        
-        gtag('config', '{$this->ga_property_id}');
-    </script>
-TRACKING;
+        $gaId = htmlspecialchars($this->ga_property_id ?? '', ENT_QUOTES);
 
-        return $out;
+        $consentInit = $this->renderConsentInit();
+        $consentUpdate = $this->renderConsentUpdate(false);
+
+        return <<<TRACKING
+{$consentInit}
+
+<script async src="https://www.googletagmanager.com/gtag/js?id={$gaId}"></script>
+<script>
+    gtag('js', new Date());
+    gtag('config', '{$gaId}');
+</script>
+
+{$consentUpdate}
+TRACKING;
+    }
+
+    public function renderGTM()
+    {
+        $id = $this->ga_property_id;
+        if (!$id || strpos($id, 'GTM-') !== 0) return '';
+
+        $jsId = json_encode($id);
+        $consentInit = $this->renderConsentInit();
+        $consentUpdate = $this->renderConsentUpdate(true);
+
+        return <<<GTM
+{$consentInit}
+
+<script>
+(function(w,d,s,l,i){
+    w[l]=w[l]||[];
+    w[l].push({
+        'gtm.start': new Date().getTime(),
+        event:'gtm.js'
+    });
+    var f=d.getElementsByTagName(s)[0],
+        j=d.createElement(s),
+        dl=l!='dataLayer'?'&l='+l:'';
+    j.async=true;
+    j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;
+    f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer',{$jsId});
+</script>
+
+{$consentUpdate}
+GTM;
+    }
+
+    public function renderGTMBody()
+    {
+        $id = $this->ga_property_id;
+        if (!$id || strpos($id, 'GTM-') !== 0) return '';
+
+        return <<<GTMBODY
+<noscript>
+<iframe src="https://www.googletagmanager.com/ns.html?id={$id}"
+        height="0" width="0" style="display:none;visibility:hidden">
+</iframe>
+</noscript>
+GTMBODY;
     }
 
     public function renderCookieTable($cookiefield)
@@ -354,89 +507,6 @@ TRACKING;
             $out .= '</tr>';
         }
         $out .= '</tbody></table>';
-        return $out;
-    }
-
-    public function renderGTM()
-    {
-        $id = $this->ga_property_id;
-        if (!$id || strpos($id, 'GTM-') !== 0) return '';
-
-        $out = <<<GTM
-<!-- Google Tag Manager -->
-<script>
-window.dataLayer = window.dataLayer || [];
-function gtag(){dataLayer.push(arguments);}
-
-gtag('consent', 'default', {
-  'analytics_storage': 'denied',
-  'ad_storage': 'denied',
-  'ad_personalization': 'denied',
-  'ad_user_data': 'denied',
-  'functionality_storage': 'denied',
-  'security_storage': 'granted'
-});
-</script>
-
-<script>
-(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer', '$id');
-</script>
-
-<script>
-(function () {
-    function getCookie(name) {
-        const value = '; ' + document.cookie;
-        const parts = value.split('; ' + name + '=');
-        if (parts.length === 2) return parts.pop().split(';').shift();
-    }
-    function getConsentCategories() {
-        try {
-            const raw = getCookie('cmnstr');
-            return raw ? JSON.parse(raw) : {};
-        } catch (e) {
-            return {};
-        }
-    }
-    const categoryMap = {
-        'necessary': ['security_storage'],
-        'statistics': ['analytics_storage','ad_storage','ad_personalization','ad_user_data','functionality_storage'],
-    };
-    const consented = getConsentCategories();
-    if (Object.keys(consented).length > 0) {
-        let updatedConsent = {
-            ad_storage: 'denied',
-            analytics_storage: 'denied',
-            ad_user_data: 'denied',
-            ad_personalization: 'denied',
-            functionality_storage: 'denied',
-            security_storage: 'granted'
-        };
-        for (const cat in consented) {
-            if (consented[cat] && categoryMap[cat]) {
-                categoryMap[cat].forEach(function(gtagKey) {
-                    updatedConsent[gtagKey] = 'granted';
-                });
-            }
-        }
-        if (window.gtag) {
-            gtag('consent', 'update', updatedConsent);
-            window.dataLayer.push({event: 'consent_updated'});
-        }
-    }
-})();
-</script>
-
-<!-- GTM Fallback -->
-<noscript>
-<iframe src="https://www.googletagmanager.com/ns.html?id=$id"
-height="0" width="0" style="display:none;visibility:hidden"></iframe>
-</noscript>
-GTM;
-
         return $out;
     }
 
