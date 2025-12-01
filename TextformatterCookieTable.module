@@ -1,46 +1,35 @@
 <?php
 
-class TextformatterCookieTable extends Textformatter implements Module{
+declare(strict_types=1);
 
-	public static function getModuleInfo() {
-		return array(
-			'title' => 'CookieMonster Textformatter', 
-			'version' => 102, 
-			'summary' => "Uses a shortcode to render a table with your configured cookies" ,
-			'author' => 'Johannes Dachsel'
-		); 
-	}	
-	
-	public function formatValue(Page $page, Field $field, &$str) {
-		$cm = $this->modules->get("CookieMonster");
-		$host = $this->config->httpHost;
-		$hostParts = explode(".", $host);
-		$tld = $hostParts[count($hostParts)-2] . "." . $hostParts[count($hostParts)-1];
-		
-		if($this->wire('languages')) {
-            $userLanguage = $this->wire('user')->language;
+namespace ProcessWire;
+
+class TextformatterCookieTable extends Textformatter implements Module
+{
+    public static function getModuleInfo()
+    {
+        return array(
+            'title' => 'CookieMonster Textformatter',
+            'version' => 103,
+            'summary' => 'Uses a shortcode to render a table with your configured cookies',
+            'author' => 'Johannes Dachsel'
+        );
+    }
+
+    public function formatValue(Page $page, Field $field, &$str): void
+    {
+        $cm = $this->modules->get('CookieMonster');
+
+        if ($this->languages) {
+            $userLanguage = $this->user->language;
             $lang = $userLanguage->isDefault() ? '' : "__$userLanguage->id";
         } else {
             $lang = '';
         }
-		
-		$output = "<p>{$cm->introtext_necessary}</p>";
-		$output .= $cm->renderCookieTable($cm->{"cookies_necessary$lang"});
-		
-		if ($cm->{"cookies_statistics$lang"}) {
-			$output .= "<p>{$cm->introtext_statistics}</p>";
-			$output .= $cm->renderCookieTable($cm->{"cookies_statistics$lang"});
-		}
-		
-		$output .= "<script>
-						function resetCookie(){
-							document.cookie = 'cmnstr=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.$tld';
-							location.reload();
-						}
-					</script>";
-		
-		$output .= '<p><button type="button" onclick="resetCookie();">'.__("Bearbeiten Sie Ihre Einstellungen").'</button></p>';
-		
-		$str = str_replace("[[cookie-table]]", $output, $str);
-	}
+
+        $output = "<p>{$cm->introtext_necessary}</p>";
+        $output .= $cm->renderCookieTable();
+
+        $str = str_replace('[[cookie-table]]', $output, $str);
+    }
 }
