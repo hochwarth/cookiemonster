@@ -20,15 +20,15 @@ Wenn abgefragt werden soll, ob Tracking erlaubt ist, nutze `allowTracking()`:
 $cmnstr = $modules->get('CookieMonster');
 
 if ($cmnstr->allowTracking()): ?>
-    <script>
-        var _mtm = window._mtm = window._mtm || [];
-        _mtm.push({'mtm.startTime': (new Date().getTime())});
-        (function() {
-            var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
-            g.src='https://analytics.example.com/matomo.js';
-            s.parentNode.insertBefore(g,s);
-        })();
-    </script>
+	<script>
+		var _mtm = window._mtm = window._mtm || [];
+		_mtm.push({'mtm.startTime': (new Date().getTime())});
+		(function() {
+			var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+			g.src='https://analytics.example.com/matomo.js';
+			s.parentNode.insertBefore(g,s);
+		})();
+	</script>
 <?php endif; ?>
 ```
 
@@ -41,9 +41,9 @@ Wenn eine direkte Kategorie geprüft werden soll:
 $cmnstr = $modules->get('CookieMonster');
 
 if ($cmnstr->isUnlocked('external')): ?>
-    <iframe src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ"></iframe>
+	<iframe src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ"></iframe>
 <?php else: ?>
-    <p>Video benötigt externe Inhalte.</p>
+	<p>Video benötigt externe Inhalte.</p>
 <?php endif; ?>
 ```
 
@@ -52,12 +52,12 @@ Oder für Marketing:
 ```php
 <?php
 if ($cmnstr->isUnlocked('marketing')): ?>
-    <!-- Facebook Pixel -->
-    <script>
-        !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-        n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-        // ...
-    </script>
+	<!-- Facebook Pixel -->
+	<script>
+		!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+		n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+		// ...
+	</script>
 <?php endif; ?>
 ```
 
@@ -97,7 +97,7 @@ Prüft ob Nutzer Statistik-Tracking erlaubt hat.
 
 ```php
 if ($cmnstr->allowTracking()) {
-    // Tracking laden
+	// Tracking laden
 }
 ```
 
@@ -107,7 +107,7 @@ Prüft eine spezifische Kategorie.
 
 ```php
 if ($cmnstr->isUnlocked('marketing')) {
-    // Marketing-Scripts laden
+	// Marketing-Scripts laden
 }
 ```
 

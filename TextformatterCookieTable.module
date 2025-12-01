@@ -6,30 +6,30 @@ namespace ProcessWire;
 
 class TextformatterCookieTable extends Textformatter implements Module
 {
-    public static function getModuleInfo()
-    {
-        return array(
-            'title' => 'CookieMonster Textformatter',
-            'version' => 103,
-            'summary' => 'Uses a shortcode to render a table with your configured cookies',
-            'author' => 'Johannes Dachsel'
-        );
-    }
+	public static function getModuleInfo()
+	{
+		return array(
+			'title' => 'CookieMonster Textformatter',
+			'version' => 103,
+			'summary' => 'Uses a shortcode to render a table with your configured cookies',
+			'author' => 'Johannes Dachsel'
+		);
+	}
 
-    public function formatValue(Page $page, Field $field, &$str): void
-    {
-        $cm = $this->modules->get('CookieMonster');
+	public function formatValue(Page $page, Field $field, &$str): void
+	{
+		$cm = $this->modules->get('CookieMonster');
 
-        if ($this->languages) {
-            $userLanguage = $this->user->language;
-            $lang = $userLanguage->isDefault() ? '' : "__$userLanguage->id";
-        } else {
-            $lang = '';
-        }
+		if ($this->languages) {
+			$userLanguage = $this->user->language;
+			$lang = $userLanguage->isDefault() ? '' : "__$userLanguage->id";
+		} else {
+			$lang = '';
+		}
 
-        $output = "<p>{$cm->introtext_necessary}</p>";
-        $output .= $cm->renderCookieTable();
+		$output = "<p>{$cm->introtext_necessary}</p>";
+		$output .= $cm->renderCookieTable();
 
-        $str = str_replace('[[cookie-table]]', $output, $str);
-    }
+		$str = str_replace('[[cookie-table]]', $output, $str);
+	}
 }
