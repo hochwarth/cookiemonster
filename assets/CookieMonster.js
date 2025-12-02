@@ -1,105 +1,95 @@
 /**
- * CookieStore API Polyfill
- * Stellt konsistenten Cookie-Zugriff über Browser hinweg bereit.
+ * Setzt einen Cookie-String auf `document.cookie`.
+ * @param {string} cookie - Der zu setzende Cookie-String.
+ * @returns {void}
  */
-if (!window.cookieStore) {
-	/**
-	 * Setzt einen Cookie-String auf `document.cookie`.
-	 * @param {string} cookie - Der zu setzende Cookie-String.
-	 * @returns {void}
-	 */
-	function setDocumentCookie(cookie) {
-		// biome-ignore lint/suspicious/noDocumentCookie: Fallback
-		document.cookie = cookie;
-	}
-
-	/**
-	 * Polyfill für die native Cookie Store API.
-	 * @namespace
-	 */
-	// @ts-expect-error Fallback
-	// biome-ignore lint/suspicious/noGlobalAssign: Fallback
-	cookieStore = {
-		/**
-		 * Ruft einen Cookie nach Namen oder Optionen ab.
-		 * @param {string | { name?: string }} [options] - Der Name des Cookies oder ein Optionen-Objekt.
-		 * @returns {Promise<{ name: string, value: string } | null>} Ein Promise, das ein Cookie-Objekt oder `null` zurückgibt.
-		 */
-		async get(options) {
-			const name = typeof options === "string" ? options : options?.name;
-			if (!name) return null;
-
-			const value = document.cookie
-				.split("; ")
-				.find((row) => row.startsWith(`${name}=`))
-				?.split("=")
-				.at(1);
-
-			return value ? { name, value: decodeURIComponent(value) } : null;
-		},
-
-		/**
-		 * Setzt einen Cookie nach Namen und Wert oder einem Optionen-Objekt.
-		 * @param {string | { name: string, value: string, expires?: number | null, sameSite?: string, path?: string, domain?: string | null }} nameOrOptions - Der Name des Cookies oder ein Optionen-Objekt.
-		 * @param {string} [value] - Der Wert des Cookies (nur wenn `nameOrOptions` ein String ist).
-		 * @returns {Promise<void>}
-		 */
-		async set(nameOrOptions, value) {
-			const options =
-				typeof nameOrOptions === "string"
-					? {
-							name: nameOrOptions,
-							value: value ?? "",
-							expires: undefined,
-							sameSite: "lax",
-							path: "/",
-						}
-					: nameOrOptions;
-
-			const {
-				name,
-				value: cookieValue,
-				expires,
-				sameSite = "lax",
-				path = "/",
-				domain,
-			} = options;
-
-			let cookie = `${name}=${encodeURIComponent(cookieValue)}`;
-
-			if (expires) {
-				cookie += `; expires=${new Date(expires).toUTCString()}`;
-			}
-
-			cookie += `; path=${path}`;
-			cookie += `; SameSite=${sameSite}`;
-
-			if (domain) {
-				cookie += `; domain=${domain}`;
-			}
-
-			if (location.protocol === "https:") {
-				cookie += "; Secure";
-			}
-
-			setDocumentCookie(cookie);
-		},
-
-		/**
-		 * Löscht einen Cookie nach Namen oder Optionen.
-		 * @param {string | { name?: string }} [options] - Der Name des Cookies oder ein Optionen-Objekt.
-		 * @returns {Promise<void>}
-		 */
-		async delete(options) {
-			const name = typeof options === "string" ? options : options?.name;
-			if (!name) return;
-
-			setDocumentCookie(
-				`${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=Lax`,
-			);
-		},
-	};
+function setDocumentCookie(cookie) {
+	document.cookie = cookie;
 }
+
+/**
+ * Polyfill für die native Cookie Store API.
+ */
+const cmnstr = {
+	/**
+	 * Ruft einen Cookie nach Namen oder Optionen ab.
+	 * @param {string | { name?: string }} [options] - Der Name des Cookies oder ein Optionen-Objekt.
+	 * @returns {Promise<{ name: string, value: string } | null>} Ein Promise, das ein Cookie-Objekt oder `null` zurückgibt.
+	 */
+	async get(options) {
+		const name = typeof options === "string" ? options : options?.name;
+		if (!name) return null;
+
+		const value = document.cookie
+			.split("; ")
+			.find((row) => row.startsWith(`${name}=`))
+			?.split("=")
+			.at(1);
+
+		return value ? { name, value: decodeURIComponent(value) } : null;
+	},
+
+	/**
+	 * Setzt einen Cookie nach Namen und Wert oder einem Optionen-Objekt.
+	 * @param {string | { name: string, value: string, expires?: number | null, sameSite?: string, path?: string, domain?: string | null }} nameOrOptions - Der Name des Cookies oder ein Optionen-Objekt.
+	 * @param {string} [value] - Der Wert des Cookies (nur wenn `nameOrOptions` ein String ist).
+	 * @returns {Promise<void>}
+	 */
+	async set(nameOrOptions, value) {
+		const options =
+			typeof nameOrOptions === "string"
+				? {
+						name: nameOrOptions,
+						value: value ?? "",
+						expires: undefined,
+						sameSite: "lax",
+						path: "/",
+					}
+				: nameOrOptions;
+
+		const {
+			name,
+			value: cookieValue,
+			expires,
+			sameSite = "lax",
+			path = "/",
+			domain,
+		} = options;
+
+		let cookie = `${name}=${encodeURIComponent(cookieValue)}`;
+
+		if (expires) {
+			cookie += `; expires=${new Date(expires).toUTCString()}`;
+		}
+
+		cookie += `; path=${path}`;
+		cookie += `; SameSite=${sameSite}`;
+
+		if (domain) {
+			cookie += `; domain=${domain}`;
+		}
+
+		if (location.protocol === "https:") {
+			cookie += "; Secure";
+		}
+
+		setDocumentCookie(cookie);
+	},
+
+	/**
+	 * Löscht einen Cookie nach Namen oder Optionen.
+	 * @param {string | { name?: string }} [options] - Der Name des Cookies oder ein Optionen-Objekt.
+	 * @returns {Promise<void>}
+	 */
+	async delete(options) {
+		const name = typeof options === "string" ? options : options?.name;
+		if (!name) return;
+
+		setDocumentCookie(
+			`${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=Lax`,
+		);
+	},
+};
 
 const dialog = /** @type {HTMLDialogElement} */ (
 	document.getElementById("cmnstr-dialog")
@@ -138,13 +128,13 @@ async function setCookieMonster(setAll) {
 
 	if (!optionValues.statistics) {
 		await Promise.all([
-			cookieStore.delete("_gat"),
-			cookieStore.delete("_ga"),
-			cookieStore.delete("_gid"),
+			cmnstr.delete("_gat"),
+			cmnstr.delete("_ga"),
+			cmnstr.delete("_gid"),
 		]);
 	}
 
-	await cookieStore.set({
+	await cmnstr.set({
 		domain: host,
 		name: "cmnstr",
 		value: optionString,
@@ -186,7 +176,7 @@ document.addEventListener("DOMContentLoaded", initCookieMonster, {
 	once: true,
 });
 
-// @ts-expect-error Extend window object
+// @ts-expect-error Extending Window Object
 window.showCookieBanner = () => {
 	dialog.showModal();
 };
