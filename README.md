@@ -17,7 +17,7 @@ Wenn abgefragt werden soll, ob Tracking erlaubt ist, nutze `allowTracking()`:
 
 ```php
 <?php
-$cmnstr = $modules->get('CookieMonster');
+/** @var CookieMonster $cmnstr */
 
 if ($cmnstr->allowTracking()): ?>
 	<script>
@@ -38,7 +38,7 @@ Wenn eine direkte Kategorie geprüft werden soll:
 
 ```php
 <?php
-$cmnstr = $modules->get('CookieMonster');
+/** @var CookieMonster $cmnstr */
 
 if ($cmnstr->isUnlocked('external')): ?>
 	<iframe src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ"></iframe>
@@ -67,7 +67,7 @@ Mit `maskContent()` kannst du externe Inhalte maskieren, bis der Nutzer der Kate
 
 ```php
 <?php
-$cmnstr = $modules->get('CookieMonster');
+/** @var CookieMonster $cmnstr */
 
 $videoIframe = '<iframe src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ"></iframe>';
 
@@ -149,7 +149,7 @@ echo $cmnstr->maskContent($iframe, 'external');
 ## Anforderungen
 
 - PHP 8.1+
-- ProcessWire 3.0.246+
+- ProcessWire 3+
 
 ## Repository
 
