@@ -603,6 +603,29 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 	 */
 	public function renderCookieTable(?string $cookieField = ''): string
 	{
+		return $this->renderCookieTemplate($cookieField, 'table.php');
+	}
+
+	/**
+	 * Rendert eine HTML-Liste von Cookies aus einem formatierten String-Feld
+	 *
+	 * @param string $cookieField Cookie-Daten
+	 * @return ?string Die gerenderte HTML-Tabelle oder leerer String
+	 */
+	public function renderCookieList(?string $cookieField = ''): string
+	{
+		return $this->renderCookieTemplate($cookieField, 'list.php');
+	}
+
+	/**
+	 * Rendert ein HTML-Template mit Cookies aus einem formatierten String-Feld
+	 *
+	 * @param string $cookieField Cookie-Daten
+	 * @param string $template Template-Pfad
+	 * @return ?string Die gerenderte HTML-Tabelle oder leerer String
+	 */
+	private function renderCookieTemplate(string $cookieField = '', string $template): string
+	{
 		// Wenn kein spezifisches Cookie-Feld bereitgestellt wird, sammeln wir alle Cookies
 		if (empty($cookieField)) {
 			$allCategoryCookies = [];
@@ -645,7 +668,7 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 			$cookiesData[] = \array_combine($headers, \array_slice($cookie, 0, \count($headers)));
 		}
 
-		return $this->renderTemplate('table.php', [
+		return $this->renderTemplate($template, [
 			'headers' => $headers,
 			'cookies' => $cookiesData,
 		]);
