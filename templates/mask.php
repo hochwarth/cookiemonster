@@ -9,6 +9,7 @@ namespace ProcessWire;
  * @var string $category
  * @var string $prompt
  * @var string $buttonEdit
+ * @var string $buttonAccept
  */
 
 ?>
@@ -21,10 +22,19 @@ namespace ProcessWire;
 	aria-live="polite">
 	<p><?= $prompt ?></p>
 
-	<button
-		type="button"
-		class="cmnstr-button"
-		data-cmnstr-action="edit">
-		<?= $buttonEdit; ?>
-	</button>
+	<div class="cmnstr-button-list">
+		<button
+			type="button"
+			class="cmnstr-button"
+			data-cmnstr-action="edit">
+			<?= $buttonEdit; ?>
+		</button>
+
+		<button
+			type="button"
+			class="cmnstr-button"
+			data-cmnstr-action="accept">
+			<?= $buttonAccept; ?>
+		</button>
+	</div>
 </div>

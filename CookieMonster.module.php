@@ -165,6 +165,9 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 	 */
 	public function init(): void
 	{
+		// Globale Variable setzen
+		$this->wire('cmnstr', $this, true);
+
 		$this->cspNonce = \bin2hex(\random_bytes(16));
 		$this->addHookAfter('Page::render', $this, 'sendSecurityHeaders');
 
@@ -386,7 +389,7 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 			$baseTitle = $category['title'];
 
 			$title = (string) $this->get("{$key}_title{$lang}") ?: $baseTitle;
-			$description = (string) $this->get("{$key}_description{$lang}") ?: $this->_("Keine Beschreibung verfügbar für '{$title}'.");
+			$description = (string) $this->get("{$key}_description{$lang}") ?: $title;
 			$cookies = (string) $this->get("{$key}_cookies{$lang}") ?: '';
 			$enabled = ($key === 'essential') ? true : (bool) $this->get("{$key}_enabled");
 
@@ -702,6 +705,7 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 			'html' => $html,
 			'category' => $category,
 			'buttonEdit' => (string) $this->get("buttontext_edit{$lang}"),
+			'buttonAccept' => (string) $this->get("buttontext_accept{$lang}"),
 			'prompt' => $prompt,
 		]);
 	}
