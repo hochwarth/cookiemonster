@@ -135,7 +135,7 @@ namespace ProcessWire;
 
 								<?php if ($category['cookies']): ?>
 									<div class="cmnstr-table-wrap">
-										<?= $module->renderCookieTable($category['cookies']) ?>
+										<?= $module->renderCookieList($category['cookies']) ?>
 									</div>
 								<?php endif; ?>
 							</div>
