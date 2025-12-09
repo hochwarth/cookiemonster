@@ -681,12 +681,12 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 	 * Maskiert externen Inhalt bis zur Zustimmung
 	 *
 	 * @param string $html Der zu maskierende HTML-Inhalt
-	 * @param string $category Cookie-Kategorie (z.B. 'external', 'marketing')
+	 * @param string|SelectableOptionArray|null $category Cookie-Kategorie (z.B. 'external', 'marketing')
 	 * @return string Maskierter oder normaler Inhalt
 	 */
 	public function maskContent(
 		string $html,
-		string $category,
+		string|SelectableOptionArray|null $category,
 	): string {
 		if ($this->isUnlocked($category)) {
 			return $html;
