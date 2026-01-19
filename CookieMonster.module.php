@@ -20,6 +20,7 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 
 	/**
 	 * Speichert die Schlüssel der Cookie-Kategorien, für die der Benutzer seine Zustimmung erteilt hat
+	 * Format: ['essential', 'statistics', 'external-youtube', 'external-jobmorgen']
 	 *
 	 * @var string[]
 	 */
@@ -44,7 +45,7 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 	 *
 	 * @return array<string, string> Array von Kategorie-Schlüsseln und deren Standardtitel
 	 */
-	private function _getBaseCategories(): array
+	private function _getBaseCategories()
 	{
 		return [
 			'essential' => [
@@ -75,7 +76,7 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 	 *
 	 * @return void
 	 */
-	public function ___install(): void
+	public function ___install()
 	{
 		if (!$this->permissions->get('manage-cookie-monster')) {
 			$permission = $this->permissions->add('manage-cookie-monster');
@@ -83,6 +84,7 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 			$permission->save();
 		}
 
+		// Feld anlegen + Optionen füllen
 		$fieldName = 'cookiemonster_category';
 		$field = $this->fields->get($fieldName);
 
@@ -91,43 +93,29 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 			$field->type = $this->fieldtypes->get('FieldtypeOptions');
 			$field->name = $fieldName;
 			$field->label = $this->_('Zugehörige Cookie-Kategorie');
-			$field->description = $this->_('Wählen Sie die Cookie-Kategorie, der dieser Inhalt zugeordnet ist. Der Inhalt wird nur angezeigt, wenn der Besucher dieser Kategorie zugestimmt hat (Ausnahme: "Notwendig" ist immer erlaubt).');
+			$field->description = $this->_('Wählen Sie die Cookie-Kategorie, der dieser Inhalt zugeordnet ist.');
 			$field->inputfield = 'InputfieldSelect';
-
 			$this->fields->save($field);
-			$field = $this->fields->get($fieldName);
-			if (!$field || !$field->id) {
-				$this->error("Kritischer Fehler: Konnte Feld '{$fieldName}' nach der Erstellung nicht erneut laden. Installation abgebrochen.");
-
-				return;
-			}
 		}
 
+		// Optionen setzen (auch bei bereits vorhandenem Feld)
 		$baseCategories = $this->_getBaseCategories();
-		$optionsStringLines = [];
 		$optionsArray = new SelectableOptionArray();
-
+		$optionsStringLines = [];
 		$index = 1;
 
-		if (!empty($baseCategories)) {
-			foreach ($baseCategories as $key => $category) {
-				$title = $category['title'];
-
-				$option = new SelectableOption();
-				$option->value = $key;
-				$option->name = $key;
-				$option->title = $title;
-				$optionsArray->add($option);
-
-				$optionsStringLines[] = "{$index}={$key}|{$title}";
-				$index++;
-			}
-
-			$field->type->setOptions($field, $optionsArray);
-
-			$field->set('_options', implode("\n", $optionsStringLines));
+		foreach ($baseCategories as $key => $category) {
+			$option = new SelectableOption();
+			$option->value = $key;
+			$option->name = $key;
+			$option->title = $category['title'];
+			$optionsArray->add($option);
+			$optionsStringLines[] = "{$index}={$key}|{$category['title']}";
+			$index++;
 		}
 
+		$field->type->setOptions($field, $optionsArray);
+		$field->set('_options', implode("\n", $optionsStringLines));
 		$this->fields->save($field);
 	}
 
@@ -136,7 +124,7 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 	 *
 	 * @return void
 	 */
-	public function ___uninstall(): void
+	public function ___uninstall()
 	{
 		$permission = $this->permissions->get('manage-cookie-monster');
 		if ($permission->id) {
@@ -163,7 +151,7 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 	 *
 	 * @return void
 	 */
-	public function init(): void
+	public function init()
 	{
 		// Globale Variable setzen
 		$this->wire('cmnstr', $this, true);
@@ -178,11 +166,132 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 		if ($this->allowTracking && $this->get('ga_property_id')) {
 			$this->addHookAfter('Page::render', $this, 'addTrackingCode');
 		}
+
+		$this->addHook('Pages::saveReady', $this, 'checkForExternalContent');
+
+		// Hook zum Aktualisieren der Feld-Optionen nach Modul-Konfiguration
+		$this->addHookAfter('Modules::saveConfig', $this, 'onConfigSave');
 	}
 
-	private function checkCookieExists(): bool
+	/**
+	 * Hook: Wird ausgeführt, wenn die Modulkonfiguration gespeichert wird
+	 * Aktualisiert die verfügbaren Cookie-Kategorie-Optionen
+	 *
+	 * @param HookEvent $event
+	 * @return void
+	 */
+	public function onConfigSave($event)
+	{
+		$moduleName = $event->arguments(0);
+		$data = $event->arguments(1);
+
+		// Nur ausführen, wenn CookieMonster-Config gespeichert wurde
+		if ($moduleName === $this->className) {
+			$this->updateCookieCategoryField($data);
+		}
+	}
+
+	/**
+	 * Hook: Wird ausgeführt, wenn eine Seite gespeichert wird
+	 * Prüft, ob ggf. externe Inhalte vorhanden sind
+	 *
+	 * @param HookEvent $event
+	 * @return void
+	 */
+	public function checkForExternalContent($event)
+	{
+		$page = $event->arguments(0);
+
+		$keywords = ['code', 'iframe', 'script', 'video', 'embed', 'external'];
+		$hasExternalContent = false;
+
+		/** @var ?RepeaterMatrixPageArray $contentblocks */
+		$contentblocks = $page->get('contentblocks|content_blocks');
+
+		if ($contentblocks) {
+			foreach ($contentblocks as $block) {
+				/** @var ?RepeaterMatrixPage $block */
+				foreach ($keywords as $keyword) {
+					if ($block->status !== Page::statusUnpublished && \strpos($block->type, $keyword) !== false) {
+						$hasExternalContent = true;
+						break 2;
+					}
+				}
+			}
+		}
+
+		if ($hasExternalContent) {
+			$this->warning('Es liegen ggf. externe Inhalte vor – Bitte Cookies prüfen!');
+		}
+	}
+
+	private function checkCookieExists()
 	{
 		return isset($_COOKIE['cmnstr']) && !empty($_COOKIE['cmnstr']);
+	}
+
+	/**
+	 * Macht eine hierarchische Cookie-Struktur flach für die interne Verarbeitung.
+	 * Konvertiert z.B. {"external":{"youtube":true}} zu ["external-youtube" => true]
+	 *
+	 * @param array<string, mixed> $structure Hierarchische Cookie-Struktur
+	 * @param string $prefix Aktuelles Präfix für rekursive Verarbeitung
+	 * @return array<string, bool> Flache Struktur mit kombinierten Keys
+	 */
+	private function flattenCookieStructure($structure, $prefix = '')
+	{
+		$result = [];
+
+		foreach ($structure as $key => $value) {
+			$fullKey = $prefix ? "{$prefix}-{$key}" : $key;
+
+			if ($fullKey === '_version') {
+				continue;
+			}
+
+			if (\is_bool($value)) {
+				$result[$fullKey] = $value;
+			} elseif (\is_array($value)) {
+				$result = \array_merge($result, $this->flattenCookieStructure($value, $fullKey));
+			}
+		}
+
+		return $result;
+	}
+
+	/**
+	 * Prüft, ob eine Kategorie vollständig akzeptiert wurde.
+	 * Eine Kategorie gilt als vollständig akzeptiert, wenn:
+	 * - Sie direkt als true gespeichert ist, ODER
+	 * - Alle ihre Unterkategorien true sind
+	 *
+	 * @param string $categoryKey Der Kategorie-Schlüssel
+	 * @param array<string, bool> $flatConsent Flache Consent-Struktur
+	 * @return bool true wenn vollständig akzeptiert
+	 */
+	private function isCategoryFullyConsented($categoryKey, $flatConsent)
+	{
+		// Direkt als true gespeichert?
+		if (isset($flatConsent[$categoryKey]) && $flatConsent[$categoryKey] === true) {
+			return true;
+		}
+
+		// Prüfe ob alle Unterkategorien true sind
+		$prefix = "{$categoryKey}-";
+		$hasSubcategories = false;
+		$allSubcategoriesTrue = true;
+
+		foreach ($flatConsent as $key => $value) {
+			if (\strpos($key, $prefix) === 0) {
+				$hasSubcategories = true;
+				if ($value !== true) {
+					$allSubcategoriesTrue = false;
+					break;
+				}
+			}
+		}
+
+		return $hasSubcategories && $allSubcategoriesTrue;
 	}
 
 	/**
@@ -190,7 +299,7 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 	 *
 	 * @return void
 	 */
-	private function processCookieConsent(): void
+	private function processCookieConsent()
 	{
 		$this->consentedCategories = ['essential'];
 		$this->allowTracking = false;
@@ -208,6 +317,7 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 
 		$baseCategories = $this->_getBaseCategories();
 
+		// Essential ist immer erlaubt
 		$essentialConsent = $baseCategories['essential']['consent'];
 		if (isset($essentialConsent) && \is_array($essentialConsent)) {
 			foreach ($essentialConsent as $googleConsentType) {
@@ -222,18 +332,34 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 		}
 
 		try {
-			$cookieValues = \json_decode($_COOKIE['cmnstr'], associative: true, flags: \JSON_THROW_ON_ERROR);
+			$cookieValues = \json_decode($_COOKIE['cmnstr'], true, 512, \JSON_THROW_ON_ERROR);
 
-			// Iteriere über alle konfigurierbaren Kategorien (außer 'essential')
+			// Alten Cookie ohne _cmnstr_version löschen und abbrechen
+			if (!isset($cookieValues['_version'])) {
+				$host = $_SERVER['HTTP_HOST'];
+
+				\setcookie(
+					'cmnstr',
+					'',
+					[
+						'expires' => 1,
+						'path' => '/',
+						'domain' => ".{$host}",
+					]
+				);
+			}
+
+			// Flatten der hierarchischen Struktur
+			$flatConsent = $this->flattenCookieStructure($cookieValues);
+
+			// Verarbeite Google Consent Mode für Base-Kategorien
 			foreach ($baseCategories as $key => $data) {
 				if ($key === 'essential') {
-					continue;  // Essential ist bereits behandelt
+					continue;
 				}
 
-				if (($cookieValues[$key] ?? false) === true) {
-					$this->consentedCategories[] = $key;
-
-					// Google Consent Mode Zustände basierend auf vom Benutzer erteilten Kategorien aktualisieren
+				// Prüfe ob die Kategorie vollständig akzeptiert wurde
+				if ($this->isCategoryFullyConsented($key, $flatConsent)) {
 					$consent = $data['consent'];
 					if (isset($consent) && \is_array($consent)) {
 						foreach ($consent as $googleConsentType) {
@@ -245,10 +371,19 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 				}
 			}
 
-			if (\in_array('statistics', $this->consentedCategories, true)) {
+			// Alle Schlüssel aus dem Cookie, die TRUE sind, in consentedCategories aufnehmen
+			// Dies inkludiert nun auch verschachtelte Keys wie "external-youtube"
+			foreach ($flatConsent as $key => $value) {
+				if ($value === true && !\in_array($key, $this->consentedCategories, true)) {
+					$this->consentedCategories[] = $key;
+				}
+			}
+
+			// Tracking erlauben wenn statistics vollständig akzeptiert
+			if ($this->isCategoryFullyConsented('statistics', $flatConsent)) {
 				$this->allowTracking = true;
 			}
-		} catch (\JsonException) {
+		} catch (\JsonException $e) {
 			$this->error($this->_('Malformed CookieMonster consent cookie detected. Resetting to default.'));
 		}
 	}
@@ -256,16 +391,47 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 	/**
 	 * Prüft, ob eine spezifische Cookie-Kategorie vom Benutzer zugestimmt wurde
 	 *
-	 * @param string|SelectableOptionArray $categoryKey Der Schlüssel der Cookie-Kategorie (z.B. 'essential', 'statistics')
+	 * @param string|SelectableOptionArray|null $categoryKey Der Schlüssel der Cookie-Kategorie (z.B. 'essential', 'external-youtube')
 	 * @return bool `true`, wenn die Kategorie freigeschaltet ist, sonst `false`
 	 */
-	public function isUnlocked(string|SelectableOptionArray|null $categoryKey): bool
+	public function isUnlocked($categoryKey)
 	{
 		if ($categoryKey instanceof SelectableOptionArray) {
 			$categoryKey = $categoryKey->value;
 		}
 
-		return \in_array($categoryKey, $this->consentedCategories, true);
+		if (empty($categoryKey)) {
+			return false;
+		}
+
+		// Exakte Übereinstimmung
+		if (\in_array($categoryKey, $this->consentedCategories, true)) {
+			return true;
+		}
+
+		// Prüfe ob eine übergeordnete Kategorie vollständig akzeptiert wurde
+		// Z.B. wenn "external" akzeptiert ist, ist auch "external-youtube" erlaubt
+		$parts = \explode('-', $categoryKey);
+		if (\count($parts) > 1) {
+			$parentKey = $parts[0];
+
+			// Wenn die Parent-Kategorie vollständig akzeptiert ist
+			if (\in_array($parentKey, $this->consentedCategories, true)) {
+				// Prüfe ob es keine anderen Unterkategorien mit false gibt
+				$prefix = "{$parentKey}-";
+				foreach ($this->consentedCategories as $consentedKey) {
+					if (\str_starts_with($consentedKey, $prefix)) {
+						// Es gibt spezifische Unterkategorien, also keine pauschale Erlaubnis
+						return false;
+					}
+				}
+
+				// Parent ist akzeptiert und es gibt keine spezifischen Unter-Keys
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	/**
@@ -273,7 +439,7 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 	 *
 	 * @return string[] Array der zugestimmten Cookie-Kategorien-Schlüssel
 	 */
-	public function getUnlockedCategories(): array
+	public function getUnlockedCategories()
 	{
 		return $this->consentedCategories;
 	}
@@ -283,7 +449,7 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 	 *
 	 * @return bool `true`, wenn Tracking erlaubt ist, sonst `false`
 	 */
-	public function allowTracking(): bool
+	public function allowTracking()
 	{
 		return $this->allowTracking;
 	}
@@ -293,7 +459,7 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 	 *
 	 * @return array<string, string> Die aktuellen Google Consent Mode v2 Zustände.
 	 */
-	public function getGoogleConsentStates(): array
+	public function getGoogleConsentStates()
 	{
 		return $this->googleConsentStates;
 	}
@@ -304,7 +470,7 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 	 * @param HookEvent $event Das ProcessWire `HookEvent`-Objekt
 	 * @return void
 	 */
-	public function addCookieBanner(HookEvent $event): void
+	public function addCookieBanner($event)
 	{
 		/** @var Page $page */
 		$page = $event->object;
@@ -342,7 +508,7 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 	 *
 	 * @return string Cookie-Banner HTML-Code
 	 */
-	private function renderBanner(): string
+	private function renderBanner()
 	{
 		$categories = $this->buildCategoriesData();
 		$lang = $this->getLanguageSuffix();
@@ -356,7 +522,6 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 		$privacyPage = $this->pages->get($privacyPageId);
 
 		$data = [
-			'module' => $this,
 			'title' => (string) $this->get("titletext{$lang}"),
 			'label' => (string) $this->get("infolabel{$lang}"),
 			'body' => (string) $this->get("infotext{$lang}"),
@@ -379,7 +544,7 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 	 *
 	 * @return array<array{key: string, enabled: bool, title: string, description: string, cookies: string, checked: bool}> Cookie-Kategorie-Daten
 	 */
-	private function buildCategoriesData(): array
+	private function buildCategoriesData()
 	{
 		$lang = $this->getLanguageSuffix();
 		$baseCategories = $this->_getBaseCategories();
@@ -407,12 +572,89 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 	}
 
 	/**
+	 * Parst den Cookie-String in eine gruppierte Struktur.
+	 *
+	 * @param string $text Der rohe Text aus dem Textarea-Feld
+	 * @return array Gruppierte Cookie-Daten
+	 */
+	private function parseCookieData($text)
+	{
+		$groups = [];
+		$headers = [
+			'name' => $this->_('Name'),
+			'provider' => $this->_('Anbieter'),
+			'purpose' => $this->_('Zweck'),
+			'duration' => $this->_('Dauer'),
+		];
+
+		// Header-Keys für die Zuordnung
+		$headerKeys = array_keys($headers);
+
+		// Standard-Gruppe für Cookies, die vor der ersten Definition stehen
+		$currentGroup = [
+			'id' => 'default',
+			'title' => '',
+			'description' => '',
+			'notice' => '',
+			'cookies' => [],
+		];
+
+		$lines = \explode("\n", $text);
+
+		foreach ($lines as $line) {
+			$line = \trim($line);
+			if (empty($line)) {
+				continue;
+			}
+
+			// Prüfen auf Gruppen-Start: "---id|Titel|Beschreibung|Hinweis"
+			if (\str_starts_with($line, '---')) {
+				// Wenn die aktuelle Gruppe Cookies hat, speichern wir sie ab
+				if (!empty($currentGroup['cookies']) || $currentGroup['id'] !== 'default') {
+					$groups[] = $currentGroup;
+				}
+
+				// Neue Gruppe initialisieren
+				// Entferne '---' und teile auf
+				$groupParts = \explode('|', \substr($line, 3));
+
+				$currentGroup = [
+					'id' => \trim($groupParts[0] ?? uniqid('grp_')),
+					'title' => \trim($groupParts[1] ?? ''),
+					'description' => \trim($groupParts[2] ?? ''),
+					'notice' => \trim($groupParts[3] ?? ''),
+					'cookies' => [],
+				];
+
+				continue;
+			}
+
+			$columns = \array_map('\trim', \explode('|', $line));
+
+			// Auf 4 Spalten auffüllen (Name, Anbieter, Zweck, Dauer)
+			$columns = \array_pad($columns, 4, '');
+
+			// Assoziatives Array erstellen: ['name' => '...', 'provider' => '...']
+			$cookieData = \array_combine($headerKeys, \array_slice($columns, 0, 4));
+
+			$currentGroup['cookies'][] = $cookieData;
+		}
+
+		// Die letzte Gruppe hinzufügen, falls vorhanden
+		if (!empty($currentGroup['cookies']) || $currentGroup['id'] !== 'default') {
+			$groups[] = $currentGroup;
+		}
+
+		return $groups;
+	}
+
+	/**
 	 * Hook: Fügt den Google Analytics Tracking-Code zum gerenderten Seiten-Output hinzu
 	 *
 	 * @param HookEvent.
 	 * @return void
 	 */
-	public function addTrackingCode(HookEvent $event): void
+	public function addTrackingCode($event)
 	{
 		/** @var Page $page */
 		$page = $event->object;
@@ -436,7 +678,7 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 	 * @param HookEvent $event Das ProcessWire `HookEvent`-Objekt.
 	 * @return void
 	 */
-	public function sendSecurityHeaders(HookEvent $event): void
+	public function sendSecurityHeaders($event)
 	{
 		if ($this->config->admin || $this->config->ajax) {
 			return;
@@ -459,7 +701,7 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 	 *
 	 * @return void
 	 */
-	private function sendReferrerPolicyHeader(): void
+	private function sendReferrerPolicyHeader()
 	{
 		if ($policy = $this->get('referrer_policy')) {
 			\header("Referrer-Policy: {$policy}");
@@ -471,7 +713,7 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 	 *
 	 * @return void
 	 */
-	private function sendContentTypeOptionsHeader(): void
+	private function sendContentTypeOptionsHeader()
 	{
 		if ((bool) $this->get('x_content_type_options_enabled')) {
 			\header('X-Content-Type-Options: nosniff');
@@ -483,7 +725,7 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 	 *
 	 * @return void
 	 */
-	private function sendHSTSHeader(): void
+	private function sendHSTSHeader()
 	{
 		if (!(bool) $this->get('hsts_enabled') || !$this->config->https) {
 			return;
@@ -509,7 +751,7 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 	 * @param HookEvent $event Das `HookEvent` zum Modifizieren des Seiten-Outputs für Nonces
 	 * @return void
 	 */
-	private function sendCSPHeader(HookEvent $event): void
+	private function sendCSPHeader($event)
 	{
 		if (!(bool) $this->get('csp_enabled')) {
 			return;
@@ -556,7 +798,7 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 	 *
 	 * @return string Der Wert für die `frame-ancestors`-Direktive.
 	 */
-	private function getFrameAncestorsValue(): string
+	private function getFrameAncestorsValue()
 	{
 		$policy = (string) $this->get('framing_policy');
 
@@ -573,7 +815,7 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 	 *
 	 * @return void
 	 */
-	private function sendCrossOriginHeaders(): void
+	private function sendCrossOriginHeaders()
 	{
 		if ($coop = $this->get('coop_policy')) {
 			\header("Cross-Origin-Opener-Policy: {$coop}");
@@ -591,7 +833,7 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 	 *
 	 * @return void
 	 */
-	private function sendPermissionsPolicyHeader(): void
+	private function sendPermissionsPolicyHeader()
 	{
 		if ((bool) $this->get('permissions_policy_enabled') && $policy = $this->get('permissions_policy')) {
 			\header("Permissions-Policy: {$policy}");
@@ -601,111 +843,205 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 	/**
 	 * Rendert eine HTML-Tabelle von Cookies aus einem formatierten String-Feld
 	 *
-	 * @param string $cookieField Cookie-Daten
-	 * @return ?string Die gerenderte HTML-Tabelle oder leerer String
+	 * @param array|null $category Cookie-Kategorie-Daten
+	 * @return string Die gerenderte HTML-Tabelle oder leerer String
 	 */
-	public function renderCookieTable(?string $cookieField = ''): string
+	public function renderCookieTable($category = [])
 	{
-		return $this->renderCookieTemplate($cookieField, 'table.php');
+		return $this->renderCookieTemplate($category, 'table.php');
 	}
 
 	/**
 	 * Rendert eine HTML-Liste von Cookies aus einem formatierten String-Feld
 	 *
-	 * @param string $cookieField Cookie-Daten
-	 * @return ?string Die gerenderte HTML-Tabelle oder leerer String
+	 * @param array|null $category Cookie-Kategorie-Daten
+	 * @return string Die gerenderte HTML-Tabelle oder leerer String
 	 */
-	public function renderCookieList(?string $cookieField = ''): string
+	public function renderCookieList(?array $category = []): string
 	{
-		return $this->renderCookieTemplate($cookieField, 'list.php');
+		return $this->renderCookieTemplate($category, 'list.php');
 	}
 
 	/**
 	 * Rendert ein HTML-Template mit Cookies aus einem formatierten String-Feld
 	 *
-	 * @param string $cookieField Cookie-Daten
+	 * @param array $category Cookie-Kategorie-Daten
 	 * @param string $template Template-Pfad
-	 * @return ?string Die gerenderte HTML-Tabelle oder leerer String
+	 * @return string Die gerenderte HTML-Tabelle oder leerer String
 	 */
-	private function renderCookieTemplate(string $cookieField = '', string $template): string
+	private function renderCookieTemplate($category = [], $template)
 	{
+		$cookies = [];
+
+		if (!empty($category['cookies'])) {
+			$cookieField = $category['cookies'];
+		}
+
 		// Wenn kein spezifisches Cookie-Feld bereitgestellt wird, sammeln wir alle Cookies
 		if (empty($cookieField)) {
-			$allCategoryCookies = [];
 			$categoriesData = $this->buildCategoriesData();
 
 			foreach ($categoriesData as $category) {
-				if (!empty($category['cookies'])) {
-					$allCategoryCookies[] = "<strong>{$category['title']}</strong>";
-					$allCategoryCookies[] = $category['cookies'];
+				if (isset($category['enabled']) && $category['enabled'] === false) {
+					continue;
+				}
+
+				// Parse den Textinhalt dieser Kategorie in Gruppen
+				$parsedGroups = $this->parseCookieData($category['cookies']);
+
+				if (!empty($parsedGroups)) {
+					$cookies[] = [
+						'type' => 'category',
+						'key' => $category['key'],
+						'title' => $category['title'],
+						'description' => $category['description'],
+						'groups' => $parsedGroups,
+					];
 				}
 			}
-			// Kombiniere alle Cookie-Strings zu einem einzigen
-			$cookieField = \implode("\n", $allCategoryCookies);
+		} else {
+			$parsedGroups = $this->parseCookieData($cookieField);
+
+			if (!empty($parsedGroups)) {
+				$cookies[] = [
+					'type' => 'category',
+					'key' => $category['key'],
+					'title' => $category['title'],
+					'description' => $category['description'],
+					'groups' => $parsedGroups,
+				];
+			}
 		}
 
-		// Wenn weiterhin keine Cookies vorhanden sind, leeren String zurückgeben
-		if (empty($cookieField)) {
+		if (empty($cookies)) {
 			return '';
 		}
 
-		$cookiesData = [];
-		$headers = [
-			$this->_('Name'),
-			$this->_('Anbieter'),
-			$this->_('Zweck'),
-			$this->_('Dauer'),
-		];
+		return $this->renderTemplate($template, [
+			'headers' => [
+				'name' => $this->_('Name'),
+				'provider' => $this->_('Anbieter'),
+				'purpose' => $this->_('Zweck'),
+				'duration' => $this->_('Dauer'),
+			],
+			'cookies' => $cookies,
+		]);
+	}
 
-		$rows = \explode("\n", $cookieField);
-
-		foreach ($rows as $row) {
-			$row = \trim($row);
-			if (empty($row)) {
-				continue;
-			}
-
-			$columns = \array_map(fn($row) => trim($row), \explode('|', $row));
-
-			$cookie = \array_pad($columns, \count($headers), '');
-			$cookiesData[] = \array_combine($headers, \array_slice($cookie, 0, \count($headers)));
+	/**
+	 * Prüft, ob eine Kategorie (oder mindestens eines ihrer Kinder) aktiv ist.
+	 * Nutzt die bereits gespeicherten Cookie-Präferenzen.
+	 *
+	 * @param string $categoryKey
+	 * @return bool
+	 */
+	public function isCategoryActive($categoryKey)
+	{
+		if (!$this->checkCookieExists()) {
+			return false;
 		}
 
-		return $this->renderTemplate($template, [
-			'headers' => $headers,
-			'cookies' => $cookiesData,
-		]);
+		// JSON decodieren & flach konvertieren
+		try {
+			$hierarchical = \json_decode($_COOKIE['cmnstr'], true, 512, \JSON_THROW_ON_ERROR);
+			$flat = $this->flattenCookieStructure($hierarchical);
+		} catch (\JsonException) {
+			return false;
+		}
+
+		if (!empty($flat[$categoryKey])) {
+			return true;
+		}
+
+		// Schauen ob eine aktivierte Gruppe dabei ist
+		foreach ($flat as $key => $value) {
+			if (\str_starts_with($key, $categoryKey . '-') && $value === true) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	/**
 	 * Maskiert externen Inhalt bis zur Zustimmung
 	 *
 	 * @param string $html Der zu maskierende HTML-Inhalt
-	 * @param string|SelectableOptionArray|null $category Cookie-Kategorie (z.B. 'external', 'marketing')
+	 * @param string|SelectableOptionArray|null $category Cookie-Kategorie (z.B. 'external', 'external-youtube')
 	 * @return string Maskierter oder normaler Inhalt
 	 */
-	public function maskContent(
-		string $html,
-		string|SelectableOptionArray|null $category,
-	): string {
+	public function maskContent($html, $category) {
+		if ($category instanceof SelectableOptionArray) {
+			$category = $category->value;
+		}
+
+		// Essential als Kategorie hinterlegen, sofern keine angegeben wurde.
+		if (empty($category)) {
+			$category = 'essential';
+		}
+
 		if ($this->isUnlocked($category)) {
 			return $html;
 		}
 
 		$lang = $this->getLanguageSuffix();
-		$baseCategories = $this->_getBaseCategories();
-		$baseTitle = $baseCategories[$category]['title'] ?? $category;
-		$categoryTitle = (string) $this->get("{$category}_title{$lang}") ?: $baseTitle;
+		$parts = \explode('-', $category);
+		$mainCategory = $parts[0];
+		$subCategoryKey = $parts[1] ?? null;
 
-		$promptKey = "{$category}_prompt{$lang}";
-		$prompt = (string) $this->get($promptKey) ?: $this->_('Dieser Inhalt benötigt deine Zustimmung zu {category}');
-		$prompt = \str_replace('{category}', "<strong>{$categoryTitle}</strong>", $prompt);
+		$baseCategories = $this->_getBaseCategories();
+		$baseTitle = $baseCategories[$mainCategory]['title'] ?? $category;
+		$categoryTitle = (string) $this->get("{$mainCategory}_title{$lang}") ?: $baseTitle;
+
+		// Versuchen, den spezifischen Hinweis aus der Gruppen-Definition zu extrahieren
+		$customNotice = '';
+		$groups = [];
+
+		if ($subCategoryKey) {
+			$cookieText = (string) $this->get("{$mainCategory}_cookies{$lang}");
+			if ($cookieText) {
+				$groups = $this->parseCookieData($cookieText);
+				foreach ($groups as $group) {
+					// Prüfen, ob die Gruppen-ID mit der Subkategorie übereinstimmt
+					if ($group['id'] === $subCategoryKey && !empty($group['notice'])) {
+						$customNotice = $group['notice'];
+						break;
+					}
+				}
+			}
+
+			// Falls kein Hinweis gefunden wurde, hängen wir den Sub-Namen an den Titel für den Standard-Prompt an
+			$subTitle = $subCategoryKey;
+			// Optional: Suche den Klarnamen der Gruppe für den Titel-Fallback
+			foreach ($groups as $group) {
+				if ($group['id'] === $subCategoryKey) {
+					$subTitle = $group['title'];
+					break;
+				}
+			}
+			$categoryTitle .= " ({$subTitle})";
+		}
+
+		$privacyPageId = (int) $this->get('privacy_page');
+		/** @var Page|NullPage $privacyPage */
+		$privacyPage = $this->pages->get($privacyPageId);
+
+		// Entscheidung: Eigener Hinweis (notice) ODER Standard-Prompt
+		if (!empty($customNotice)) {
+			$prompt = $customNotice;
+		} else {
+			$promptKey = "{$mainCategory}_prompt{$lang}";
+			// Falls kein spezifischer Prompt für die Kategorie existiert, globalen Standard nutzen
+			$prompt = (string) $this->get($promptKey) ?: ((string) $this->get("mask_prompt{$lang}") ?: $this->_('Dieser Inhalt benötigt deine Zustimmung zu {category}'));
+
+			$prompt = \str_replace('{category}', "<strong>{$categoryTitle}</strong>", $prompt);
+		}
 
 		return $this->renderTemplate('mask.php', [
-			'html' => $html,
 			'category' => $category,
 			'buttonEdit' => (string) $this->get("buttontext_edit{$lang}"),
 			'buttonAccept' => (string) $this->get("buttontext_accept{$lang}"),
+			'privacyPage' => $privacyPage,
 			'prompt' => $prompt,
 		]);
 	}
@@ -716,7 +1052,7 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 	 *
 	 * @return string Der Sprach-Suffix.
 	 */
-	private function getLanguageSuffix(): string
+	private function getLanguageSuffix()
 	{
 		if (!$this->languages) {
 			return '';
@@ -728,13 +1064,146 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 	}
 
 	/**
+	 * Synchronisiert die Cookie-Kategorien mit dem Options-Feld.
+	 * Behält IDs stabil und erzwingt die Sortierung (Kategorie -> Alphabetisch).
+	 *
+	 * @param array $data Aktuelle Modul-Daten vom Hook
+	 * @return void
+	 */
+	private function updateCookieCategoryField($data = [])
+	{
+		$field = $this->fields->get('cookiemonster_category');
+		if (!($field instanceof Field && $field->type instanceof FieldtypeOptions)) {
+			return;
+		}
+
+		$data = !empty($data) ? $data : $this->data;
+		$lang = $this->getLanguageSuffix();
+		$baseCategories = $this->_getBaseCategories();
+
+		$wanted = [];
+		$seenTitles = [];
+
+		// Soll-Zustand aufbauen und Titel-Eindeutigkeit sicherstellen
+		foreach ($baseCategories as $key => $cat) {
+			if ($key !== 'essential' && empty($data["{$key}_enabled"])) {
+				continue;
+			}
+
+			$mainTitle = (string) ($data["{$key}_title{$lang}"] ?? '') ?: $cat['title'];
+
+			$safeMain = in_array($mainTitle, $seenTitles) ? "$mainTitle ($key)" : $mainTitle;
+			$seenTitles[] = $safeMain;
+			$wanted[$key] = $safeMain;
+
+			$cookieVal = (string) ($data["{$key}_cookies{$lang}"] ?? '');
+			if ($cookieVal) {
+				$subs = $this->extractSubCategories($cookieVal, $key);
+
+				asort($subs);  // Kinder alphabetisch sortieren
+
+				foreach ($subs as $subKey => $subTitle) {
+					$fullKey = "$key-$subKey";
+					$fullTitle = "$mainTitle: $subTitle";
+					$safeSub = in_array($fullTitle, $seenTitles) ? "$fullTitle ($fullKey)" : $fullTitle;
+					$seenTitles[] = $safeSub;
+					$wanted[$fullKey] = $safeSub;
+				}
+			}
+		}
+
+		/** @var SelectableOptionArray $currentOptions */
+		$currentOptions = $field->type->getOptions($field);
+		$toDelete = new SelectableOptionArray();
+		$toAdd = new SelectableOptionArray();
+
+		// Differenz für native API-Methoden ermitteln
+		foreach ($currentOptions as $opt) {
+			if (!isset($wanted[$opt->value])) {
+				$toDelete->add($opt);
+			}
+		}
+		foreach ($wanted as $key => $title) {
+			if (!$currentOptions->get("value=$key")) {
+				$opt = new SelectableOption();
+				$opt->value = $opt->name = $key;
+				$opt->title = $title;
+				$toAdd->add($opt);
+			}
+		}
+
+		// Native API für stabile Datenbank-Änderungen
+		if ($toDelete->count()) {
+			$field->type->deleteOptions($field, $toDelete);
+		}
+		if ($toAdd->count()) {
+			$field->type->addOptions($field, $toAdd);
+		}
+
+		// Manuelle SQL-Updates für Sortierung und Titel (umgeht Manager-Kollisionen)
+		$db = $this->wire('database');
+		$table = 'fieldtype_options';
+		$sortIndex = 1;
+
+		foreach ($wanted as $key => $title) {
+			$query = $db->prepare("UPDATE `$table` SET `sort` = :sort, `title` = :title WHERE `fields_id` = :fid AND `value` = :val");
+			$query->execute([
+				':sort' => $sortIndex++,
+				':title' => $title,
+				':fid' => $field->id,
+				':val' => $key
+			]);
+		}
+
+		// Feld-Metadaten säubern und speichern
+		$field->set('_options', '');
+		$this->fields->save($field);
+	}
+
+	/**
+	 * Extrahiert Subkategorien aus einer Cookie-Definition.
+	 * Sucht nach Gruppen-Definitionen (---id|Titel|Beschreibung|Hinweis) und gibt sie zurück.
+	 *
+	 * @param string $cookieText Der Cookie-Text aus der Konfiguration
+	 * @param string $parentKey Der Schlüssel der übergeordneten Kategorie
+	 * @return array<string, string> Array von Subkategorie-Keys und Titeln
+	 */
+	private function extractSubCategories($cookieText, $parentKey)
+	{
+		$subCategories = [];
+		$lines = \explode("\n", $cookieText);
+
+		foreach ($lines as $line) {
+			$line = \trim($line);
+
+			// Prüfe auf Gruppen-Definition: "---id|Titel|Beschreibung"
+			if (\str_starts_with($line, '---')) {
+				$groupParts = \explode('|', \substr($line, 3));
+				$groupId = \trim($groupParts[0] ?? '');
+				$groupTitle = \trim($groupParts[1] ?? '');
+				$groupDescription = \trim($groupParts[2] ?? '');
+				$groupNotice = \trim($groupParts[3] ?? '');
+
+				// Nur hinzufügen, wenn ID und Titel vorhanden sind
+				if (!empty($groupId) && !empty($groupTitle)) {
+					// Normalisiere die ID (entferne Parent-Prefix falls vorhanden)
+					$normalizedId = \str_replace("{$parentKey}-", '', $groupId);
+					$subCategories[$normalizedId] = $groupTitle;
+				}
+			}
+		}
+
+		return $subCategories;
+	}
+
+	/**
 	 * Rendert eine Template-Datei aus dem 'templates'-Verzeichnis des Moduls
 	 *
 	 * @param string $filename Der Name der Template-Datei
 	 * @param array<string, mixed> $data Ein assoziatives Array von Daten, das an das Template übergeben wird
 	 * @return string Der gerenderte Template-Inhalt oder ein leerer String
 	 */
-	private function renderTemplate(string $filename, array $data = []): string
+	private function renderTemplate($filename, $data = [])
 	{
 		$templatePath = $this->config->paths->{$this} . "templates/{$filename}";
 
@@ -747,7 +1216,13 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 		return $this->files->render($templatePath, $data);
 	}
 
-	public function getModuleConfigInputfields(InputfieldWrapper $inputfields): InputfieldWrapper
+	/**
+	 * Erlaubt das Hinzufügen von JS in der ProcessWire Modulconfig
+	 * 
+	 * @param InputfieldWrapper $inputfields 
+	 * @return InputfieldWrapper 
+	 */
+	public function getModuleConfigInputfields($inputfields)
 	{
 		wire()->modules->get('JqueryWireTabs');
 		wire()->config->scripts->add(wire()->urls->get('CookieMonster') . '/assets/CookieMonster.config.js');

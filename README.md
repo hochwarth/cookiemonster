@@ -1,4 +1,4 @@
-# CookieMonster 4.1.0
+# CookieMonster 4.2.2
 
 ## Konfiguration
 
@@ -101,13 +101,27 @@ if ($cmnstr->allowTracking()) {
 }
 ```
 
-### isUnlocked(string $category): bool
+### isUnlocked(string|SelectableOptionArray $category): bool
 
-Prüft eine spezifische Kategorie.
+Prüft eine spezifische Kategorie bzw. Subkategorie.
 
 ```php
 if ($cmnstr->isUnlocked('marketing')) {
 	// Marketing-Scripts laden
+}
+
+if ($cmnstr->isUnlocked('external-youtube')) {
+	// YouTube-Videos laden
+}
+```
+
+### isCategoryActive(string $categoryKey): bool
+
+Prüft ob eine Kategorie oder mindestens eine ihrer Subkategorien aktiv ist.
+
+```php
+if ($cmnstr->isCategoryActive('external')) {
+	// Externe Inhalte sind (teilweise) freigeschaltet
 }
 ```
 
@@ -117,7 +131,7 @@ Alle freigeschalteten Kategorien.
 
 ```php
 $categories = $cmnstr->getUnlockedCategories();
-// ['essential', 'statistics', ...]
+// ['essential', 'statistics', 'external-youtube', ...]
 ```
 
 ### getGoogleConsentStates(): array
@@ -129,13 +143,23 @@ $states = $cmnstr->getGoogleConsentStates();
 // ['ad_storage' => 'granted', 'analytics_storage' => 'denied', ...]
 ```
 
-### maskContent(string $html, string $category): string
+### maskContent(string $html, string|SelectableOptionArray $category): string
 
-Maskiert HTML-Inhalte bis zur Zustimmung der Kategorie.
+Maskiert HTML-Inhalte bis zur Zustimmung der Kategorie bzw. Subkategorie.
 
 ```php
 $iframe = '<iframe src="..."></iframe>';
 echo $cmnstr->maskContent($iframe, 'external');
+echo $cmnstr->maskContent($iframe, 'external-youtube');
+```
+
+### renderCookieTable(array $category = []): string
+
+Rendert die konfigurierten Cookies als HTML-Tabelle.
+
+```php
+// Alle Cookies
+echo $cmnstr->renderCookieTable();
 ```
 
 ## Cookie-Kategorien
@@ -146,9 +170,23 @@ echo $cmnstr->maskContent($iframe, 'external');
 * **Marketing** — Facebook Pixel, Google Ads
 * **External** — YouTube, iFrames, externe Widgets
 
+### Subkategorien
+
+Kategorien können Subkategorien haben (z.B. `external-youtube`, `marketing-facebook`). Diese werden in der Admin-Konfiguration bei den Cookie-Daten definiert:
+
+```
+Name | Provider | Purpose | Duration
+---youtube|YouTube Videos|YouTube-Player für Embedded Videos
+youtube_player | Google LLC | Video playback | Session
+
+Name | Provider | Purpose | Duration
+---vimeo|Vimeo Videos|Vimeo-Player für Embedded Videos
+vimeo_player | Vimeo Inc | Video playback | Session
+```
+
 ## Anforderungen
 
-- PHP 8.1+
+- PHP 7.4+
 - ProcessWire 3+
 
 ## Repository

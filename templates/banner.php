@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace ProcessWire;
 
 /**
- * @var CookieMonster $module
+ * @var CookieMonster $cmnstr
  * @var string $title
  * @var string $label
  * @var string $body
@@ -17,7 +17,6 @@ namespace ProcessWire;
  * @var Page|NullPage $imprintPage
  * @var Page|NullPage $privacyPage
  * @var array $categories
- * @var Modules $modules
  * @var Pages $pages
  */
 
@@ -92,28 +91,30 @@ namespace ProcessWire;
 
 		<form class="cmnstr-form" id="cmnstr-form">
 			<div class="cmnstr-categories">
-				<details class="cmnstr-category-detail" name="cmnstr-details" open>
+				<details class="cmnstr-category-details" name="cmnstr-details" open>
 					<summary class="cmnstr-category-summary">
 						<span class="cmnstr-category-title"><?= $label; ?></span>
 					</summary>
 
-					<div class="cmnstr-category-content"><?= \nl2br($body); ?></div>
+					<div class="cmnstr-category-content">
+						<p><?= \nl2br($body); ?></p>
+					</div>
 				</details>
 
 				<?php foreach ($categories as $category): ?>
 					<?php if ($category['enabled'] && !empty($category['cookies'])): ?>
-						<details class="cmnstr-category-detail" name="cmnstr-details">
+						<details class="cmnstr-category-details" name="cmnstr-details">
 							<summary class="cmnstr-category-summary">
 								<span class="cmnstr-category-title"><?= $category['title'] ?></span>
 								<span
 									class="cmnstr-category-state"
-									data-active="<?= $category['checked'] ? 'true' : 'false'; ?>">
+									data-active="<?= $cmnstr->isCategoryActive($category['key']) ? 'true' : 'false'; ?>">
 									<?= __('Aktiv'); ?>
 								</span>
 							</summary>
 
 							<div class="cmnstr-category-content">
-								<div class="cmnstr-category-grid">
+								<div class="cmnstr-grid">
 									<p class="cmnstr-category-description"><?= $category['description'] ?></p>
 
 									<label class="cmnstr-field" for="cmnstr-<?= $category['key'] ?>">
@@ -122,20 +123,20 @@ namespace ProcessWire;
 											type="checkbox"
 											id="cmnstr-<?= $category['key'] ?>"
 											name="cmnstr-<?= $category['key'] ?>"
-											class="cmnstr-checkbox"
+											class="cmnstr-checkbox cmnstr-category-checkbox"
 											<?php if ($category['key'] === 'essential'): ?>
 											checked
 											disabled
-											<?php else: ?>
-											<?php if ($category['checked'] ?? false): ?>checked<?php endif; ?>
+											<?php elseif ($category['checked'] ?? false): ?>
+											checked
 											<?php endif; ?>
 											aria-label="<?= $category['title'] ?>">
 									</label>
 								</div>
 
 								<?php if ($category['cookies']): ?>
-									<div class="cmnstr-table-wrap">
-										<?= $module->renderCookieList($category['cookies']) ?>
+									<div class="cmnstr-data-wrap">
+										<?= $cmnstr->renderCookieList($category) ?>
 									</div>
 								<?php endif; ?>
 							</div>

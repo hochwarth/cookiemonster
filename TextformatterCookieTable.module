@@ -28,13 +28,13 @@ class TextformatterCookieTable extends Textformatter implements Module
 		}
 
 		$needle = '[[cookie-table]]';
-		if (str_contains($str, $needle)) {
+		if (strpos($str, $needle) !== false) {
 			$output = $cm->renderCookieTable();
 			$str = str_replace($needle, $output, $str);
 		}
 
 		$needle = '[[cookie-list]]';
-		if (str_contains($str, $needle)) {
+		if (strpos($str, $needle) !== false) {
 			$output = $cm->renderCookieList();
 			$str = str_replace($needle, $output, $str);
 		}
