@@ -5,21 +5,15 @@ declare(strict_types=1);
 namespace ProcessWire;
 
 /**
- * @var string $html
- * @var string $category
  * @var string $prompt
  * @var string $buttonEdit
  * @var string $buttonAccept
+ * @var Page|NullPage $privacyPage
  */
 
 ?>
 
-<div
-	class="cmnstr-content-mask"
-	data-content='<?= \json_encode($html) ?>'
-	data-category="<?= $category ?>"
-	role="region"
-	aria-live="polite">
+<div class="cmnstr-content-mask" role="region">
 	<p><?= $prompt ?></p>
 
 	<div class="cmnstr-button-list">
@@ -37,4 +31,11 @@ namespace ProcessWire;
 			<?= $buttonAccept; ?>
 		</button>
 	</div>
+
+	<?php if ($privacyPage->id): ?>
+		<p class="cmnstr-small">
+			<?= __('Weitere Informationen finden Sie hier:'); ?>
+			<a href="<?= $privacyPage->url ?>" class="cmnstr-link"><?= $privacyPage->title ?></a>
+		</p>
+	<?php endif; ?>
 </div>
