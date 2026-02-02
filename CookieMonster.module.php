@@ -337,7 +337,17 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 			// Alten Cookie ohne _cmnstr_version löschen und abbrechen
 			if (!isset($cookieValues['_version'])) {
 				$host = $_SERVER['HTTP_HOST'];
+				\setcookie(
+					'cmnstr',
+					'',
+					[
+						'expires' => 1,
+						'path' => '/',
+						'domain' => ".{$host}",
+					]
+				);
 
+				$host = str_replace("www.", '', $host);
 				\setcookie(
 					'cmnstr',
 					'',
@@ -420,7 +430,7 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 				// Prüfe ob es keine anderen Unterkategorien mit false gibt
 				$prefix = "{$parentKey}-";
 				foreach ($this->consentedCategories as $consentedKey) {
-					if (\str_starts_with($consentedKey, $prefix)) {
+					if (\strpos($consentedKey, $prefix) === 0) {
 						// Es gibt spezifische Unterkategorien, also keine pauschale Erlaubnis
 						return false;
 					}
@@ -608,7 +618,7 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 			}
 
 			// Prüfen auf Gruppen-Start: "---id|Titel|Beschreibung|Hinweis"
-			if (\str_starts_with($line, '---')) {
+			if (\strpos($line, '---') === 0) {
 				// Wenn die aktuelle Gruppe Cookies hat, speichern wir sie ab
 				if (!empty($currentGroup['cookies']) || $currentGroup['id'] !== 'default') {
 					$groups[] = $currentGroup;
@@ -651,7 +661,7 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 	/**
 	 * Hook: Fügt den Google Analytics Tracking-Code zum gerenderten Seiten-Output hinzu
 	 *
-	 * @param HookEvent.
+	 * @param HookEvent $event
 	 * @return void
 	 */
 	public function addTrackingCode($event)
@@ -765,7 +775,7 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 		$policy = \preg_replace('#[\n\r]#', ' ', $policy);
 		$cspParts = [];
 
-		if (\str_contains($policy, 'nonce-proxy')) {
+		if (\strpos($policy, 'nonce-proxy') !== false) {
 			$policy = \str_replace('nonce-proxy', "nonce-{$this->cspNonce}", $policy);
 
 			$output = (string) $event->return;
@@ -777,7 +787,7 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 			$cspParts[] = $policy;
 		}
 
-		if (!\str_contains($policy, 'frame-ancestors')) {
+		if (\strpos($policy, 'frame-ancestors') === false) {
 			$frameValue = $this->getFrameAncestorsValue();
 			if ($frameValue) {
 				$cspParts[] = "frame-ancestors {$frameValue}";
@@ -802,11 +812,14 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 	{
 		$policy = (string) $this->get('framing_policy');
 
-		return match ($policy) {
-			'self' => "'self'",
-			'custom' => (string) $this->get('framing_custom_origins'),
-			default => "'none'",
-		};
+		switch ($policy) {
+			case 'self':
+				return "'self'";
+			case 'custom':
+				return (string) $this->get('framing_custom_origins');
+			default:
+				return "'none'";
+		}
 	}
 
 	/**
@@ -857,7 +870,7 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 	 * @param array|null $category Cookie-Kategorie-Daten
 	 * @return string Die gerenderte HTML-Tabelle oder leerer String
 	 */
-	public function renderCookieList(?array $category = []): string
+	public function renderCookieList($category = [])
 	{
 		return $this->renderCookieTemplate($category, 'list.php');
 	}
@@ -872,6 +885,7 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 	private function renderCookieTemplate($category = [], $template)
 	{
 		$cookies = [];
+		$cookieField = '';
 
 		if (!empty($category['cookies'])) {
 			$cookieField = $category['cookies'];
@@ -905,9 +919,9 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 			if (!empty($parsedGroups)) {
 				$cookies[] = [
 					'type' => 'category',
-					'key' => $category['key'],
-					'title' => $category['title'],
-					'description' => $category['description'],
+					'key' => $category['key'] ?? '',
+					'title' => $category['title'] ?? '',
+					'description' => $category['description'] ?? '',
 					'groups' => $parsedGroups,
 				];
 			}
@@ -945,7 +959,7 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 		try {
 			$hierarchical = \json_decode($_COOKIE['cmnstr'], true, 512, \JSON_THROW_ON_ERROR);
 			$flat = $this->flattenCookieStructure($hierarchical);
-		} catch (\JsonException) {
+		} catch (\JsonException $e) {
 			return false;
 		}
 
@@ -955,7 +969,7 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 
 		// Schauen ob eine aktivierte Gruppe dabei ist
 		foreach ($flat as $key => $value) {
-			if (\str_starts_with($key, $categoryKey . '-') && $value === true) {
+			if (\strpos($key, $categoryKey . '-') === 0 && $value === true) {
 				return true;
 			}
 		}
@@ -1177,12 +1191,10 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 			$line = \trim($line);
 
 			// Prüfe auf Gruppen-Definition: "---id|Titel|Beschreibung"
-			if (\str_starts_with($line, '---')) {
+			if (\strpos($line, '---') === 0) {
 				$groupParts = \explode('|', \substr($line, 3));
 				$groupId = \trim($groupParts[0] ?? '');
 				$groupTitle = \trim($groupParts[1] ?? '');
-				$groupDescription = \trim($groupParts[2] ?? '');
-				$groupNotice = \trim($groupParts[3] ?? '');
 
 				// Nur hinzufügen, wenn ID und Titel vorhanden sind
 				if (!empty($groupId) && !empty($groupTitle)) {
@@ -1207,7 +1219,7 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 	{
 		$templatePath = $this->config->paths->{$this} . "templates/{$filename}";
 
-		if (!\file_exists($templatePath)) {
+		if (!@$this->files->exists($templatePath)) {
 			$this->error($this->_('Template nicht gefunden') . ": {$filename}");
 
 			return '';
