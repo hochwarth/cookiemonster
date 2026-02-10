@@ -210,6 +210,10 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 
 		if ($contentblocks) {
 			foreach ($contentblocks as $block) {
+                if (!isset($block->type) || empty($block->type)) {
+                    continue;
+                }
+
 				/** @var ?RepeaterMatrixPage $block */
 				foreach ($keywords as $keyword) {
 					if ($block->status !== Page::statusUnpublished && \strpos($block->type, $keyword) !== false) {
