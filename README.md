@@ -174,15 +174,29 @@ echo $cmnstr->renderCookieTable();
 
 Kategorien können Subkategorien haben (z.B. `external-youtube`, `marketing-facebook`). Diese werden in der Admin-Konfiguration bei den Cookie-Daten definiert:
 
-```
-Name | Provider | Purpose | Duration
----youtube|YouTube Videos|YouTube-Player für Embedded Videos
-youtube_player | Google LLC | Video playback | Session
+| Name           | Provider       | Purpose                                | Duration/Hint                         |
+| -------------- | -------------- | -------------------------------------- | ------------------------------------- |
+| ---youtube     | YouTube Videos | YouTube-Player für eingebettete Videos | Wir nutzen YouTube für externe Videos |
+| youtube_player | Google LLC     | Video playback                         | Session                               |
 
-Name | Provider | Purpose | Duration
----vimeo|Vimeo Videos|Vimeo-Player für Embedded Videos
-vimeo_player | Vimeo Inc | Video playback | Session
-```
+| Name         | Provider     | Purpose                              | Duration/Hint                       |
+| ------------ | ------------ | ------------------------------------ | ----------------------------------- |
+| ---vimeo     | Vimeo Videos | Vimeo-Player für eingebettete Videos | Wir nutzen Vimeo für externe Videos |
+| vimeo_player | Vimeo Inc    | Video playback                       | Session                             |
+
+*Die letzte Spalte ist bei **Cookies** für die Dauer und bei **Cookie-Gruppen** für deren Hinweis da.*
+
+<details>
+	<summary>Tabelle in Textform</summary>
+
+	Name | Provider | Purpose | Duration/Hint
+	---youtube|YouTube Videos|YouTube-Player für eingebettete Videos
+	youtube_player | Google LLC | Video playback | Session
+
+	Name | Provider | Purpose | Duration/Hint
+	---vimeo|Vimeo Videos|Vimeo-Player für eingebettete Videos
+	vimeo_player | Vimeo Inc | Video playback | Session
+</details>
 
 ## Anforderungen
 
