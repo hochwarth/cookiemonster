@@ -138,7 +138,7 @@
 	position: relative;
 	display: flex;
 	align-items: center;
-	justify-content: end;
+	justify-content: center;
 	block-size: 1em;
 	inline-size: auto;
 	aspect-ratio: 1;
@@ -493,7 +493,7 @@
 .cmnstr-footer {
 	display: flex;
 	flex-direction: column;
-	justify-content: flex-end;
+	justify-content: end;
 	gap: var(--cmnstr-space-xs);
 	inline-size: 100%;
 	margin-block-start: 0;
