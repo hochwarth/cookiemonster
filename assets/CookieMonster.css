@@ -149,9 +149,15 @@
 	line-height: 0;
 	font-weight: lighter;
 	padding-inline: 0;
+	color: var(--cmnstr-muted);
 	background-color: transparent;
 	cursor: pointer;
 	user-select: none;
+	transition: var(--cmnstr-transition);
+}
+
+.cmnstr-close-button:is(:hover, :focus-visible) {
+	color: var(--cmnstr-primary-color);
 }
 
 .cmnstr-close-button::before {
@@ -336,7 +342,7 @@
 	block-size: 0.25em;
 	inline-size: 62.5%;
 	background-color: var(--cmnstr-checkbox-checked-fg);
-	transform: translate(-50%, -50%);;
+	transform: translate(-50%, -50%);
 }
 
 .cmnstr .cmnstr-checkbox:disabled {
@@ -613,7 +619,7 @@
 }
 
 .cmnstr-group-summary:not([open] > *)::after {
-	content: "..."
+	content: "...";
 }
 
 .cmnstr-group {

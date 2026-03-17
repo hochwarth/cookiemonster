@@ -96,10 +96,6 @@ const dialog = /** @type {HTMLDialogElement} */ (
 );
 if (!dialog) throw new Error("Cookie-Banner fehlt.");
 
-const infoAlert = /** @type {HTMLDialogElement} */ (
-	document.getElementById("cmnstr-alert")
-);
-
 /**
  * Aktualisiert den Status einer einzelnen Kategorie-Checkbox.
  * Prüft alle Kinder und setzt die Checkbox auf checked/indeterminate.
@@ -328,7 +324,7 @@ async function setCookieMonster(setAll) {
 	const maxExpires = 180 * 24 * 60 * 60 * 1000;
 	const expiresDate = Date.now() + maxExpires;
 
-	const value = { ...hierarchicalOptions, _version: 423 };
+	const value = { ...hierarchicalOptions, _version: 424 };
 
 	await cmnstr.set({
 		domain: host,

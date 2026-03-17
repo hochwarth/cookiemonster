@@ -1,4 +1,4 @@
-# CookieMonster 4.2.3
+# CookieMonster 4.2.4
 
 ## Konfiguration
 
