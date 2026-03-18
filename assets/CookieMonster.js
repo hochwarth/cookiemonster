@@ -85,15 +85,11 @@ const cmnstr = {
 		const name = typeof options === "string" ? options : options?.name;
 		if (!name) return;
 
-		setDocumentCookie(
-			`${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=Lax`,
-		);
+		setDocumentCookie(`${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=Lax`);
 	},
 };
 
-const dialog = /** @type {HTMLDialogElement} */ (
-	document.getElementById("cmnstr-dialog")
-);
+const dialog = /** @type {HTMLDialogElement} */ (document.getElementById("cmnstr-dialog"));
 if (!dialog) throw new Error("Cookie-Banner fehlt.");
 
 /**
@@ -116,9 +112,7 @@ function updateCheckboxState(categoryKey) {
 
 	if (!checkbox || children.length === 0) return;
 
-	const checkedCount = Array.from(children).filter(
-		(child) => child.checked,
-	).length;
+	const checkedCount = Array.from(children).filter((child) => child.checked).length;
 
 	if (checkedCount === 0) {
 		checkbox.checked = false;
@@ -137,9 +131,7 @@ function updateCheckboxState(categoryKey) {
  * @returns {void}
  */
 function refreshAllCheckboxStates() {
-	const categoryCheckboxes = document.querySelectorAll(
-		".cmnstr-category-checkbox",
-	);
+	const categoryCheckboxes = document.querySelectorAll(".cmnstr-category-checkbox");
 	for (const checkbox of categoryCheckboxes) {
 		updateCheckboxState(checkbox.getAttribute("name"));
 	}
@@ -213,9 +205,7 @@ function buildHierarchicalStructure(flatOptions) {
 	// Verarbeite Gruppen
 	for (const [groupName, subOptions] of groups) {
 		// false-Einträge entfernen
-		const clean = Object.fromEntries(
-			[...subOptions].filter(([, value]) => value),
-		);
+		const clean = Object.fromEntries([...subOptions].filter(([_key, value]) => value));
 
 		// Das heißt, alle verbleibenden Werte sind true
 		const allTrue = Object.values(clean).every((v) => v === true);
@@ -225,9 +215,7 @@ function buildHierarchicalStructure(flatOptions) {
 		} else {
 			// rekursiv oder leeres Objekt, falls keine Kinder übrig
 			result[groupName] =
-				Object.keys(clean).length === 0
-					? false
-					: buildHierarchicalStructure(clean);
+				Object.keys(clean).length === 0 ? false : buildHierarchicalStructure(clean);
 		}
 	}
 
@@ -295,9 +283,7 @@ async function setCookieMonster(setAll) {
 	const flatOptions = {};
 
 	/** @type {NodeListOf<HTMLInputElement>} */
-	const cookieOptions = document.querySelectorAll(
-		".cmnstr-checkbox:not(:disabled)",
-	);
+	const cookieOptions = document.querySelectorAll(".cmnstr-checkbox:not(:disabled)");
 
 	for (const option of cookieOptions) {
 		const key = option.name.replace("cmnstr-", "");
@@ -324,7 +310,7 @@ async function setCookieMonster(setAll) {
 	const maxExpires = 180 * 24 * 60 * 60 * 1000;
 	const expiresDate = Date.now() + maxExpires;
 
-	const value = { ...hierarchicalOptions, _version: 424 };
+	const value = { ...hierarchicalOptions, _version: 430 };
 
 	await cmnstr.set({
 		domain: host,
@@ -349,9 +335,7 @@ async function initCookieMonster() {
 	document.addEventListener("click", (event) => {
 		if (!event.target) return;
 
-		const button = /** @type {Element} */ (event.target).closest(
-			"[data-cmnstr-action]",
-		);
+		const button = /** @type {Element} */ (event.target).closest("[data-cmnstr-action]");
 		if (!button) return;
 
 		const action = button.getAttribute("data-cmnstr-action");
