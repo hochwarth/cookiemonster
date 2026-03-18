@@ -106,14 +106,14 @@ $config = [
 						'name' => 'imprint_page',
 						'type' => 'pageListSelect',
 						'label' => __('Impressum-Seite'),
-						'notes' => __('Optionaler Link zu deiner Impressum-Seite'),
+						'notes' => __('Optionaler Link zur Impressum-Seite'),
 						'columnWidth' => 50,
 					],
 					[
 						'name' => 'privacy_page',
 						'type' => 'pageListSelect',
 						'label' => __('Datenschutz-Seite'),
-						'notes' => __('Optionaler Link zu deiner Datenschutz-Seite'),
+						'notes' => __('Optionaler Link zur Datenschutz-Seite'),
 						'columnWidth' => 50,
 					],
 				]
@@ -134,7 +134,7 @@ $config = [
 				'name' => 'mask_prompt',
 				'type' => 'text',
 				'label' => __('Info-Text für blockierte Inhalte'),
-				'value' => __('Dieser Inhalt benötigt deine Zustimmung zu {category}'),
+				'value' => __('Dieser Inhalt benötigt Ihre Zustimmung zu {category}'),
 				'description' => __('Wird mit einem Button angezeigt, falls der entsprechende Inhalt blockiert wird'),
 				'notes' => __('Verwende {category} als Platzhalter für den Kategorienamen'),
 				'useLanguages' => true,
@@ -592,24 +592,161 @@ $config = [
 			],
 		]
 	],
-	// --- Google Analytics ---
+	// --- Head ---
 	[
 		'type' => 'wrapper',
-		'label' => __('Google Analytics'),
-		'name' => 'google_analytics',
+		'label' => __('Head'),
+		'name' => 'head',
 		'attr' => [
-			'title' => __('Google Analytics'),
+			'title' => __('Head'),
 			'class' => 'WireTab',
 		],
 		'children' => [
 			[
-				'name' => 'ga_property_id',
+				'name' => 'google_site_veficiation',
 				'type' => 'text',
-				'label' => __('Property-ID'),
-				'description' => __('Gib eine Property-ID ein um Tracking zu aktivieren'),
-				'notes' => __('Unterstützt: UA-XXXXXXXX (Universal), G-XXXXXXXX (GA4), AW-XXXXXXXX (Ads), DC-XXXXXXXX (Floodlight)'),
+				'label' => __('Google Site Verification'),
+				'description' => __('Verifizierungsschlüssel zur Verfizierung für die Google Search Console'),
 				'value' => '',
 			],
-		]
+		],
+	],
+	// --- Tracking ---
+	[
+		'type' => 'wrapper',
+		'label' => __('Tracking'),
+		'name' => 'tracking',
+		'attr' => [
+			'title' => __('Tracking'),
+			'class' => 'WireTab',
+		],
+		'children' => [
+			// --- Google Analytics ---
+			[
+				'type' => 'fieldset',
+				'label' => __('Google Analytics/GTM'),
+				'name' => 'google_analytics',
+				'collapsed' => true,
+				'children' => [
+					[
+						'name' => 'ga_property_id',
+						'type' => 'text',
+						'label' => __('Property-ID'),
+						'description' => __('Gib eine Property-ID ein, um das Tracking zu aktivieren'),
+						'notes' => __('Unterstützt: UA-XXXXXXXX (Universal), G-XXXXXXXX (GA4), AW-XXXXXXXX (Ads), DC-XXXXXXXX (Floodlight)'),
+						'value' => '',
+					],
+					[
+						'name' => 'gtm_id',
+						'type' => 'text',
+						'label' => __('GTM-ID'),
+						'description' => __('Gib eine GTM-ID ein, um den Google Tag Manager zu aktivieren'),
+						'notes' => __('Unterstützt IDs im `GTM-XXXXXXXX` Format'),
+						'value' => '',
+					],
+				]
+			],
+			// --- LinkedIn Insight ---
+			[
+				'type' => 'fieldset',
+				'label' => __('LinkedIn Insight'),
+				'name' => 'linkedin_insight',
+				'collapsed' => true,
+				'children' => [
+					[
+						'name' => 'linkedin_insight_id',
+						'type' => 'text',
+						'label' => __('Insight-ID'),
+						'description' => __('Gib eine LinkedIn Insight-ID ein, um das Tracking zu aktivieren'),
+						'placeholder' => '1234567',
+						'value' => '',
+					],
+				]
+			],
+			// --- Matomo ---
+			[
+				'type' => 'fieldset',
+				'label' => __('Matomo'),
+				'name' => 'matomo',
+				'collapsed' => true,
+				'children' => [
+					[
+						'name' => 'matomo_enabled',
+						'type' => 'checkbox',
+						'label' => __('Matomo aktivieren?'),
+						'value' => false,
+					],
+					[
+						'name' => 'matomo_url',
+						'type' => 'text',
+						'label' => __('Matomo-URL'),
+						'description' => __('An diese URL werden die Tracking-Daten geschickt.'),
+						'placeholder' => __('https://matomo.beispiel.de'),
+						'value' => '',
+						'required' => true,
+						'requiredIf' => 'matomo_enabled=1',
+						'columnWidth' => 67,
+						'showIf' => 'matomo_enabled=1',
+					],
+					[
+						'name' => 'matomo_siteid',
+						'type' => 'text',
+						'label' => __('Seiten-ID im Matomo-Tracking'),
+						'description' => __('Standardmäßig ist diese `1`, kann jedoch beim Tracking mehrerer Seiten abweichen.'),
+						'value' => '1',
+						'required' => true,
+						'requiredIf' => 'matomo_enabled=1',
+						'columnWidth' => 33,
+						'showIf' => 'matomo_enabled=1',
+					],
+					[
+						'name' => 'matomo_sharetracking',
+						'type' => 'checkbox',
+						'label' => __('Tracking der Domain teilen?'),
+						'description' => __('Tracking mit anderen Seiten auf der Domain (Subdomains) teilen'),
+						'value' => false,
+						'columnWidth' => 40,
+						'showIf' => 'matomo_enabled=1',
+					],
+					[
+						'name' => 'matomo_sharedomain',
+						'type' => 'text',
+						'label' => __('Geteilte Domain'),
+						'notes' => __('Hierdurch kann das Tracking von `www.beispiel.de`, `test.beispiel.de` und `aktion.beispiel.de` geteilt werden.'),
+						'placeholder' => __('*.beispiel.de'),
+						'value' => '',
+						'columnWidth' => 60,
+						'required' => true,
+						'requiredIf' => 'matomo_enabled=1,matomo_sharetracking=1',
+						'showIf' => 'matomo_enabled=1,matomo_sharetracking=1',
+					],
+				]
+			],
+			// --- Meta Pixel ---
+			[
+				'type' => 'fieldset',
+				'label' => __('Meta Pixel'),
+				'name' => 'meta_pixel',
+				'collapsed' => true,
+				'children' => [
+					[
+						'name' => 'meta_pixel_id',
+						'type' => 'text',
+						'label' => __('Pixel-ID'),
+						'description' => __('Gib eine Pixel-ID ein, um das Tracking zu aktivieren'),
+						'value' => '',
+					],
+					[
+						'name' => 'meta_pixel_event',
+						'type' => 'text',
+						'label' => __('Standard-Event'),
+						'description' => __('Gib eine Property-ID ein um Tracking zu aktivieren'),
+						'notes' => __('Liste aller Standard-Events: `https://developers.facebook.com/docs/meta-pixel/reference#standard-events`'),
+						'value' => 'PageView',
+						'showIf' => 'meta_pixel_id!=""',
+					],
+				]
+			],
+		],
 	],
 ];
