@@ -40,7 +40,7 @@
 <details>
 	<summary>Google Analytics</summary>
 
-	---ga|Google Analytics|Google Analytics erfasst dein Nutzerverhalten auf dieser Website und sendet die Daten an Google, um uns Statistiken über Besucher und deren Verhalten zu zeigen|
+	---ga|Google Analytics|Google Analytics erfasst das Nutzerverhalten auf dieser Website und sendet die Daten an Google, um uns Statistiken über Besucher und deren Verhalten zu zeigen|
 	_ga|Google|Registriert eine eindeutige ID, die verwendet wird, um statistische Daten dazu, wie der Besucher die Website nutzt, zu generieren.|2 Jahre
 	_gat|Google|Wird von Google Analytics verwendet, um die Anforderungsrate einzuschränken.|1 Tag
 	_gid|Google|Registriert eine eindeutige ID, die verwendet wird, um statistische Daten dazu, wie der Besucher die Website nutzt, zu generieren|1 Tag
@@ -72,7 +72,7 @@
 <details>
 	<summary>Google Maps</summary>
 
-	---gmaps|Google Maps|Google Maps nutzt Cookies um Kartenfunktionen bereitzustellen, Nutzungsdaten zu erfassen und personalisierte Werbung anzuzeigen. Die Dienste werden erst nach deiner Zustimmung geladen|Die Anfahrt zu unserer Kanzlei stellen wir auf einer Karte von Google Maps dar. Dies erfordert Ihre Zustimmung.
+	---gmaps|Google Maps|Google Maps nutzt Cookies um Kartenfunktionen bereitzustellen, Nutzungsdaten zu erfassen und personalisierte Werbung anzuzeigen. Die Dienste werden erst nach Ihrer Zustimmung geladen|Die Anfahrt zu unserer Kanzlei stellen wir auf einer Karte von Google Maps dar. Dies erfordert Ihre Zustimmung.
 	NID|Google Maps|Dieses Cookie wird von Google im Rahmen der Nutzung von Google Maps verwendet. Das NID-Cookie enthält eine eindeutige ID, über die Google bevorzugte Einstellungen und andere Informationen speichert|6 Monate
 	1P_JAR|Google Maps|Dieses Cookie wird verwendet, um die Werbedienste von Google zu unterstützen|1 Monat
 	CONSENT|Google Maps|Enthält Informationen darüber, wie der Endbenutzer die Website verwendet und welche Werbung der Endbenutzer möglicherweise gesehen hat|20 Jahre

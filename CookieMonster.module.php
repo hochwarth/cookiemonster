@@ -808,6 +808,7 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 	{
 		return $this->renderTemplate('tags/matomo.php', [
 			'matomoUrl' => (string) $this->get('matomo_url'),
+			'documentTitle' => (string) $this->get('matomo_documenttitle'),
 			'siteId' => (string) $this->get('matomo_siteid'),
 			'shareTracking' => (bool) $this->get('matomo_sharetracking'),
 			'shareDomain' => (string) $this->get('matomo_sharedomain'),
@@ -1197,7 +1198,7 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 		} else {
 			$promptKey = "{$mainCategory}_prompt{$lang}";
 			// Falls kein spezifischer Prompt für die Kategorie existiert, globalen Standard nutzen
-			$prompt = (string) $this->get($promptKey) ?: ((string) $this->get("mask_prompt{$lang}") ?: $this->_('Dieser Inhalt benötigt deine Zustimmung zu {category}'));
+			$prompt = (string) $this->get($promptKey) ?: (string) $this->get("mask_prompt{$lang}");
 
 			$prompt = \str_replace('{category}', "<strong>{$categoryTitle}</strong>", $prompt);
 		}

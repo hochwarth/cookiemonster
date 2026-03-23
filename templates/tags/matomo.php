@@ -6,6 +6,7 @@ namespace ProcessWire;
 
 /**
  * @var string $matomoUrl - https://matomo.example.com/
+ * @var string $documentTitle
  * @var string $siteId - 1
  * @var bool $shareTracking - false
  * @var string $shareDomain - https://*.example.com/
@@ -19,7 +20,7 @@ namespace ProcessWire;
 <?php if (!$noScript): ?>
 	<script nonce="<?= $cspNonce; ?>" async>
 		let _paq = window._paq || [];
-		_paq.push(["setDocumentTitle", document.title]);
+		_paq.push(["setDocumentTitle", <?= $documentTitle ? "'{$documentTitle}'" : 'document.title'; ?>]);
 		<?php if ($shareTracking): ?>
 			_paq.push(["setCookieDomain", "<?= $shareDomain; ?>"]);
 		<?php endif; ?>
@@ -27,9 +28,9 @@ namespace ProcessWire;
 		_paq.push(["trackPageView"]);
 		_paq.push(["enableLinkTracking"]);
 		(() => {
-			const u = "<?= $matomoUrl; ?>";
+			const u = "<?= $matomoUrl; ?>/";
 			_paq.push(["setTrackerUrl", `${u}matomo.php`]);
-			_paq.push(["setSiteId", ""]);
+			_paq.push(["setSiteId", "<?= $siteId; ?>"]);
 			const g = document.createElement("script");
 			const s = document.currentScript;
 			g.async = true;

@@ -685,7 +685,16 @@ $config = [
 						'value' => '',
 						'required' => true,
 						'requiredIf' => 'matomo_enabled=1',
-						'columnWidth' => 67,
+						'columnWidth' => 40,
+						'showIf' => 'matomo_enabled=1',
+					],
+					[
+						'name' => 'matomo_documenttitle',
+						'type' => 'text',
+						'label' => __('Dokumenttitel'),
+						'notes' => __('Wird kein Titel hier hinterlegt, wird einfach der Titel der aufgerufenen Webseite verwendet.'),
+						'value' => '',
+						'columnWidth' => 35,
 						'showIf' => 'matomo_enabled=1',
 					],
 					[
@@ -696,7 +705,7 @@ $config = [
 						'value' => '1',
 						'required' => true,
 						'requiredIf' => 'matomo_enabled=1',
-						'columnWidth' => 33,
+						'columnWidth' => 25,
 						'showIf' => 'matomo_enabled=1',
 					],
 					[
