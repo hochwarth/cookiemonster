@@ -749,7 +749,6 @@ $config = [
 						'name' => 'meta_pixel_event',
 						'type' => 'text',
 						'label' => __('Standard-Event'),
-						'description' => __('Gib eine Property-ID ein um Tracking zu aktivieren'),
 						'notes' => __('Liste aller Standard-Events: `https://developers.facebook.com/docs/meta-pixel/reference#standard-events`'),
 						'value' => 'PageView',
 						'showIf' => 'meta_pixel_id!=""',
