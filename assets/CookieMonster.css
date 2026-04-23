@@ -60,7 +60,7 @@
 	z-index: calc(infinity);
 	display: flex;
 	flex-direction: column;
-	inline-size: min(92.5%, 116ch);
+	inline-size: min(92.5%, 80ch + 32.5svi);
 	max-inline-size: calc(100% - var(--cmnstr-space-base) * 2);
 	max-block-size: calc(100% - var(--cmnstr-space-base) * 2);
 	overflow: clip;
@@ -84,7 +84,7 @@
 	position: fixed;
 	inset: var(--cmnstr-space-xs);
 	inset-block-start: auto;
-	inline-size: min(92.5%, 80ch);
+	inline-size: min(92.5%, 75ch + 12.5svi);
 	margin: auto;
 	overflow-y: auto;
 }
@@ -701,7 +701,7 @@
 	}
 
 	.cmnstr-category-details {
-		--size: 30%;
+		--size: min(30%, 36ch);
 		--gap: var(--cmnstr-space-lg);
 	}
 

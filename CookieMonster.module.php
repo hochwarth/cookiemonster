@@ -27,7 +27,7 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 	private array $consentedCategories = [];
 
 	/**
-	 * Zeigt an, ob Tracking (z.B. Google statistics) basierend auf der Nutzerzustimmung erlaubt ist
+	 * Zeigt an, ob Tracking (z.B. Google Analytics) basierend auf der Nutzerzustimmung erlaubt ist
 	 *
 	 * @var bool
 	 */
@@ -161,11 +161,12 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 
 		$this->processCookieConsent();
 
-		$this->addHookAfter('Page::render', $this, 'addCookieBanner');
-
-		if ($this->allowTracking && $this->get('ga_property_id')) {
-			$this->addHookAfter('Page::render', $this, 'addTrackingCode');
+		if ($this->get('is_active')) {
+			$this->addHookAfter('Page::render', $this, 'addCookieBanner');
 		}
+
+		$this->addHookAfter('Page::render', $this, 'addHeadCodes');
+		$this->addHookAfter('Page::render', $this, 'addTrackingCodes');
 
 		$this->addHook('Pages::saveReady', $this, 'checkForExternalContent');
 
@@ -210,9 +211,9 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 
 		if ($contentblocks) {
 			foreach ($contentblocks as $block) {
-                if (!isset($block->type) || empty($block->type)) {
-                    continue;
-                }
+				if (!isset($block->type) || empty($block->type)) {
+					continue;
+				}
 
 				/** @var ?RepeaterMatrixPage $block */
 				foreach ($keywords as $keyword) {
@@ -338,7 +339,7 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 		try {
 			$cookieValues = \json_decode($_COOKIE['cmnstr'], true, 512, \JSON_THROW_ON_ERROR);
 
-			// Alten Cookie ohne _cmnstr_version löschen und abbrechen
+			// Alten Cookie ohne _version löschen und abbrechen
 			if (!isset($cookieValues['_version'])) {
 				$host = $_SERVER['HTTP_HOST'];
 				\setcookie(
@@ -351,7 +352,7 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 					]
 				);
 
-				$host = str_replace("www.", '', $host);
+				$host = str_replace('www.', '', $host);
 				\setcookie(
 					'cmnstr',
 					'',
@@ -414,8 +415,8 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 			$categoryKey = $categoryKey->value;
 		}
 
-		if (empty($categoryKey)) {
-			return false;
+		if (empty($categoryKey) || !$this->categoryExists($categoryKey)) {
+			return null;
 		}
 
 		// Exakte Übereinstimmung
@@ -663,12 +664,12 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 	}
 
 	/**
-	 * Hook: Fügt den Google Analytics Tracking-Code zum gerenderten Seiten-Output hinzu
+	 * Hook: Fügt die Tracking-Codes zum gerenderten Seiten-Output hinzu
 	 *
 	 * @param HookEvent $event
 	 * @return void
 	 */
-	public function addTrackingCode($event)
+	public function addHeadCodes($event)
 	{
 		/** @var Page $page */
 		$page = $event->object;
@@ -677,13 +678,182 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 			return;
 		}
 
-		$trackingCode = $this->renderTemplate('ga-tracking.php', [
+		$return = (string) $event->return;
+
+		$headCode = '';
+
+		if ($this->get('google_site_verification')) {
+			$headCode .= $this->addGSVHeadCode();
+		}
+
+		$return = \str_replace('</head>', $headCode . '</head>', $return);
+
+		$event->return = (string) $return;
+	}
+
+	/**
+	 * Fügt den Google Site Verification-String zum gerenderten Seiten-Output im Head hinzu
+	 *
+	 * @return string
+	 */
+	public function addGSVHeadCode()
+	{
+		return $this->renderTemplate('head/gsv.php', [
+			'verificationString' => (string) $this->get('google_site_verification'),
+		]);
+	}
+
+	/**
+	 * Hook: Fügt die Tracking-Codes zum gerenderten Seiten-Output hinzu
+	 *
+	 * @param HookEvent $event
+	 * @return void
+	 */
+	public function addTrackingCodes($event)
+	{
+		/** @var Page $page */
+		$page = $event->object;
+
+		if (\in_array($page->template->name, ['admin', 'form-builder'], true)) {
+			return;
+		}
+
+		$return = (string) $event->return;
+
+		$trackingHead = '';
+		$trackingBody = '';
+
+		if ($this->get('ga_property_id')) {
+			$category = $this->get('ga_cookie_category');
+			$cookie = $this->get('ga_cookie_id');
+
+			if ($this->isUnlocked("{$category}-{$cookie}") ?? $this->allowTracking) {
+				$trackingHead .= $this->addGATrackingCode();
+				$trackingBody .= $this->addGATrackingCode(true);
+			}
+		}
+		if ($this->get('gtm_id')) {
+			$category = $this->get('gtm_cookie_category');
+			$cookie = $this->get('gtm_cookie_id');
+
+			if ($this->isUnlocked("{$category}-{$cookie}") ?? $this->allowTracking) {
+				$trackingHead .= $this->addGTMTrackingCode();
+				$trackingBody .= $this->addGTMTrackingCode(true);
+			}
+		}
+		if ($this->get('linkedin_insight_id')) {
+			$category = $this->get('linkedin_insight_cookie_category');
+			$cookie = $this->get('linkedin_insight_cookie_id');
+
+			if ($this->isUnlocked("{$category}-{$cookie}") ?? $this->allowTracking) {
+				$trackingHead .= $this->addLinkedInTrackingCode();
+				$trackingBody .= $this->addLinkedInTrackingCode(true);
+			}
+		}
+		if ($this->get('matomo_enabled')) {
+			$category = $this->get('matomo_cookie_category');
+			$cookie = $this->get('matomo_cookie_id');
+
+			if ($this->isUnlocked("{$category}-{$cookie}") ?? $this->allowTracking) {
+				$trackingHead .= $this->addMatomoTrackingCode();
+				$trackingBody .= $this->addMatomoTrackingCode(true);
+			}
+		}
+		if ($this->get('meta_pixel_id')) {
+			$category = $this->get('meta_pixel_cookie_category');
+			$cookie = $this->get('meta_pixel_cookie_id');
+
+			if ($this->isUnlocked("{$category}-{$cookie}") ?? $this->allowTracking) {
+				$trackingHead .= $this->addMetaTrackingCode();
+				$trackingBody .= $this->addMetaTrackingCode(true);
+			}
+		}
+
+		$return = \str_replace('</head>', $trackingHead . '</head>', $return);
+		$return = \str_replace('</body>', $trackingBody . '</body>', $return);
+
+		$event->return = (string) $return;
+	}
+
+	/**
+	 * Fügt den Google Analytics Tracking-Code zum gerenderten Seiten-Output hinzu
+	 *
+	 * @param bool $noScript
+	 * @return string
+	 */
+	public function addGATrackingCode($noScript = false)
+	{
+		return $this->renderTemplate('tags/ga.php', [
 			'propertyId' => (string) $this->get('ga_property_id'),
 			'googleConsentStates' => $this->getGoogleConsentStates(),
 			'cspNonce' => (string) $this->cspNonce,
+			'noScript' => (bool) $noScript,
 		]);
+	}
 
-		$event->return = \str_replace('</body>', $trackingCode . '</body>', (string) $event->return);
+	/**
+	 * Fügt den Google Tag Manager-Code zum gerenderten Seiten-Output hinzu
+	 *
+	 * @param bool $noScript
+	 * @return string
+	 */
+	public function addGTMTrackingCode($noScript = false)
+	{
+		return $this->renderTemplate('tags/gtm.php', [
+			'gtmId' => (string) $this->get('gtm_id'),
+			'cspNonce' => (string) $this->cspNonce,
+			'noScript' => (bool) $noScript,
+		]);
+	}
+
+	/**
+	 * Fügt den LinkedIn Insight-Code zum gerenderten Seiten-Output hinzu
+	 *
+	 * @param bool $noScript
+	 * @return string
+	 */
+	public function addLinkedInTrackingCode($noScript = false)
+	{
+		return $this->renderTemplate('tags/linkedin.php', [
+			'insightId' => (string) $this->get('linkedin_insight_id'),
+			'cspNonce' => (string) $this->cspNonce,
+			'noScript' => (bool) $noScript,
+		]);
+	}
+
+	/**
+	 * Fügt den Matomo Tracking-Code zum gerenderten Seiten-Output hinzu
+	 *
+	 * @param bool $noScript
+	 * @return string
+	 */
+	public function addMatomoTrackingCode($noScript = false)
+	{
+		return $this->renderTemplate('tags/matomo.php', [
+			'matomoUrl' => (string) $this->get('matomo_url'),
+			'documentTitle' => (string) $this->get('matomo_documenttitle'),
+			'siteId' => (string) $this->get('matomo_siteid'),
+			'shareTracking' => (bool) $this->get('matomo_sharetracking'),
+			'shareDomain' => (string) $this->get('matomo_sharedomain'),
+			'cspNonce' => (string) $this->cspNonce,
+			'noScript' => (bool) $noScript,
+		]);
+	}
+
+	/**
+	 * Fügt den Meta Pixel Tracking-Code zum gerenderten Seiten-Output hinzu
+	 *
+	 * @param bool $noScript
+	 * @return string
+	 */
+	public function addMetaTrackingCode($noScript = false)
+	{
+		return $this->renderTemplate('tags/meta.php', [
+			'pixel' => (string) $this->get('meta_pixel_id'),
+			'event' => (string) $this->get('meta_pixel_event'),
+			'cspNonce' => (string) $this->cspNonce,
+			'noScript' => (bool) $noScript,
+		]);
 	}
 
 	/**
@@ -947,6 +1117,35 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 	}
 
 	/**
+	 * Prüft, ob eine Kategorie oder Unterkategorie existiert.
+	 *
+	 * @param string $categoryKey z.B. 'external' oder 'external-youtube'
+	 * @return bool
+	 */
+	public function categoryExists($categoryKey)
+	{
+		if (empty($categoryKey)) {
+			return false;
+		}
+
+		$baseCategories = $this->_getBaseCategories();
+		[$parentKey, $subKey] = \array_pad(\explode('-', $categoryKey, 2), 2, null);
+
+		if (!isset($baseCategories[$parentKey])) {
+			return false;
+		}
+
+		if ($subKey === null) {
+			return true;
+		}
+
+		$lang = $this->getLanguageSuffix();
+		$cookieText = (string) $this->get("{$parentKey}_cookies{$lang}");
+
+		return isset($this->extractSubCategories($cookieText, $parentKey)[$subKey]);
+	}
+
+	/**
 	 * Prüft, ob eine Kategorie (oder mindestens eines ihrer Kinder) aktiv ist.
 	 * Nutzt die bereits gespeicherten Cookie-Präferenzen.
 	 *
@@ -988,7 +1187,8 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 	 * @param string|SelectableOptionArray|null $category Cookie-Kategorie (z.B. 'external', 'external-youtube')
 	 * @return string Maskierter oder normaler Inhalt
 	 */
-	public function maskContent($html, $category) {
+	public function maskContent($html, $category)
+	{
 		if ($category instanceof SelectableOptionArray) {
 			$category = $category->value;
 		}
@@ -1050,7 +1250,7 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 		} else {
 			$promptKey = "{$mainCategory}_prompt{$lang}";
 			// Falls kein spezifischer Prompt für die Kategorie existiert, globalen Standard nutzen
-			$prompt = (string) $this->get($promptKey) ?: ((string) $this->get("mask_prompt{$lang}") ?: $this->_('Dieser Inhalt benötigt deine Zustimmung zu {category}'));
+			$prompt = (string) $this->get($promptKey) ?: (string) $this->get("mask_prompt{$lang}");
 
 			$prompt = \str_replace('{category}', "<strong>{$categoryTitle}</strong>", $prompt);
 		}
@@ -1234,9 +1434,9 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 
 	/**
 	 * Erlaubt das Hinzufügen von JS in der ProcessWire Modulconfig
-	 * 
-	 * @param InputfieldWrapper $inputfields 
-	 * @return InputfieldWrapper 
+	 *
+	 * @param InputfieldWrapper $inputfields
+	 * @return InputfieldWrapper
 	 */
 	public function getModuleConfigInputfields($inputfields)
 	{
