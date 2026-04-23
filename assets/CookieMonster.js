@@ -310,7 +310,7 @@ async function setCookieMonster(setAll) {
 	const maxExpires = 180 * 24 * 60 * 60 * 1000;
 	const expiresDate = Date.now() + maxExpires;
 
-	const value = { ...hierarchicalOptions, _version: 430 };
+	const value = { ...hierarchicalOptions, _version: 431 };
 
 	await cmnstr.set({
 		domain: host,
