@@ -106,6 +106,8 @@ Admin → Modules → CookieMonster
 3. Security Headers nach Bedarf
 4. Optional Google Analytics Property-ID
 
+Jedem Tracking-Code (GA, GTM, Matomo, Meta Pixel, LinkedIn) kann im Admin eine **Cookie-Kategorie** und eine **Cookie-ID** zugewiesen werden. Ist beides gesetzt, wird der Code nur ausgegeben, wenn genau diese Kategorie bzw. Subkategorie freigeschaltet ist. Ohne Zuweisung gilt wie bisher: Code wird bei Statistik-Zustimmung ausgegeben.
+
 ## Inhalte laden
 
 ### Für Tracking (Matomo, GA, etc.)
@@ -282,6 +284,8 @@ Kategorien können Subkategorien haben (z.B. `external-youtube`, `marketing-face
 | vimeo_player | Vimeo Inc    | Video playback                       | Session                             |
 
 *Die letzte Spalte ist bei **Cookies** für die Dauer und bei **Cookie-Gruppen** für deren Hinweis da.*
+
+Die **ID** einer Gruppe (z.B. `youtube` aus `---youtube|…`) wird automatisch zum Subkategorie-Schlüssel. Sobald eine Gruppe in den Cookie-Daten einer Kategorie definiert ist, können `isUnlocked('external-youtube')` und `maskContent($html, 'external-youtube')` genutzt werden. Der **Hinweis** (4. Spalte bei Gruppen) wird in der Inhaltsmaske statt des allgemeinen Kategorie-Prompts angezeigt.
 
 <details>
 	<summary>Tabelle in Textform</summary>

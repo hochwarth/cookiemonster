@@ -603,7 +603,7 @@ $config = [
 		],
 		'children' => [
 			[
-				'name' => 'google_site_veficiation',
+				'name' => 'google_site_verification',
 				'type' => 'text',
 				'label' => __('Google Site Verification'),
 				'description' => __('Verifizierungsschlüssel zur Verfizierung für die Google Search Console'),

@@ -682,7 +682,7 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 
 		$headCode = '';
 
-		if ($this->get('google_site_veficiation')) {
+		if ($this->get('google_site_verification')) {
 			$headCode .= $this->addGSVHeadCode();
 		}
 
@@ -699,7 +699,7 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 	public function addGSVHeadCode()
 	{
 		return $this->renderTemplate('head/gsv.php', [
-			'verificationString' => (string) $this->get('google_site_veficiation'),
+			'verificationString' => (string) $this->get('google_site_verification'),
 		]);
 	}
 
