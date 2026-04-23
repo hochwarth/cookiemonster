@@ -166,9 +166,7 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 		}
 
 		$this->addHookAfter('Page::render', $this, 'addHeadCodes');
-		if ($this->allowTracking) {
-			$this->addHookAfter('Page::render', $this, 'addTrackingCodes');
-		}
+		$this->addHookAfter('Page::render', $this, 'addTrackingCodes');
 
 		$this->addHook('Pages::saveReady', $this, 'checkForExternalContent');
 
@@ -417,8 +415,8 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 			$categoryKey = $categoryKey->value;
 		}
 
-		if (empty($categoryKey)) {
-			return false;
+		if (empty($categoryKey) || !$this->categoryExists($categoryKey)) {
+			return null;
 		}
 
 		// Exakte Übereinstimmung
@@ -726,24 +724,49 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 		$trackingBody = '';
 
 		if ($this->get('ga_property_id')) {
-			$trackingHead .= $this->addGATrackingCode();
-			$trackingBody .= $this->addGATrackingCode(true);
+			$category = $this->get('ga_cookie_category');
+			$cookie = $this->get('ga_cookie_id');
+
+			if ($this->isUnlocked("{$category}-{$cookie}") ?? $this->allowTracking) {
+				$trackingHead .= $this->addGATrackingCode();
+				$trackingBody .= $this->addGATrackingCode(true);
+			}
 		}
 		if ($this->get('gtm_id')) {
-			$trackingHead .= $this->addGTMTrackingCode();
-			$trackingBody .= $this->addGTMTrackingCode(true);
+			$category = $this->get('gtm_cookie_category');
+			$cookie = $this->get('gtm_cookie_id');
+
+			if ($this->isUnlocked("{$category}-{$cookie}") ?? $this->allowTracking) {
+				$trackingHead .= $this->addGTMTrackingCode();
+				$trackingBody .= $this->addGTMTrackingCode(true);
+			}
 		}
 		if ($this->get('linkedin_insight_id')) {
-			$trackingHead .= $this->addLinkedInTrackingCode();
-			$trackingBody .= $this->addLinkedInTrackingCode(true);
+			$category = $this->get('linkedin_insight_cookie_category');
+			$cookie = $this->get('linkedin_insight_cookie_id');
+
+			if ($this->isUnlocked("{$category}-{$cookie}") ?? $this->allowTracking) {
+				$trackingHead .= $this->addLinkedInTrackingCode();
+				$trackingBody .= $this->addLinkedInTrackingCode(true);
+			}
 		}
 		if ($this->get('matomo_enabled')) {
-			$trackingHead .= $this->addMatomoTrackingCode();
-			$trackingBody .= $this->addMatomoTrackingCode(true);
+			$category = $this->get('matomo_cookie_category');
+			$cookie = $this->get('matomo_cookie_id');
+
+			if ($this->isUnlocked("{$category}-{$cookie}") ?? $this->allowTracking) {
+				$trackingHead .= $this->addMatomoTrackingCode();
+				$trackingBody .= $this->addMatomoTrackingCode(true);
+			}
 		}
 		if ($this->get('meta_pixel_id')) {
-			$trackingHead .= $this->addMetaTrackingCode();
-			$trackingBody .= $this->addMetaTrackingCode(true);
+			$category = $this->get('meta_pixel_cookie_category');
+			$cookie = $this->get('meta_pixel_cookie_id');
+
+			if ($this->isUnlocked("{$category}-{$cookie}") ?? $this->allowTracking) {
+				$trackingHead .= $this->addMetaTrackingCode();
+				$trackingBody .= $this->addMetaTrackingCode(true);
+			}
 		}
 
 		$return = \str_replace('</head>', $trackingHead . '</head>', $return);
@@ -1091,6 +1114,35 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 			],
 			'cookies' => $cookies,
 		]);
+	}
+
+	/**
+	 * Prüft, ob eine Kategorie oder Unterkategorie existiert.
+	 *
+	 * @param string $categoryKey z.B. 'external' oder 'external-youtube'
+	 * @return bool
+	 */
+	public function categoryExists($categoryKey)
+	{
+		if (empty($categoryKey)) {
+			return false;
+		}
+
+		$baseCategories = $this->_getBaseCategories();
+		[$parentKey, $subKey] = \array_pad(\explode('-', $categoryKey, 2), 2, null);
+
+		if (!isset($baseCategories[$parentKey])) {
+			return false;
+		}
+
+		if ($subKey === null) {
+			return true;
+		}
+
+		$lang = $this->getLanguageSuffix();
+		$cookieText = (string) $this->get("{$parentKey}_cookies{$lang}");
+
+		return isset($this->extractSubCategories($cookieText, $parentKey)[$subKey]);
 	}
 
 	/**
