@@ -1,6 +1,103 @@
-# CookieMonster 4.2.4
+# CookieMonster 4.3.1
 
-## Konfiguration
+## Inhaltsverzeichnis
+
+- [Typische Cookies](#typische-cookie-konfigurationen)
+- [Technische Dokumentation](#technische-dokumentation-konfiguration)
+
+## Typische Cookie-Konfigurationen
+
+- [Notwendige Cookies](#notwendige-cookies)
+- [Funktionelle Cookies](#funktionelle-cookies)
+- [Statistik-Cookies](#statistik-cookies)
+- [Marketing-Cookies](#marketing-cookies)
+- [Externe Inhalte](#externe-inhalte)
+
+### Notwendige Cookies
+
+<details>
+	<summary>ProcessWire</summary>
+
+	wire|beispiel.de|Der Cookie ist für die sichere Anmeldung und die Erkennung von Spam oder Missbrauch der Webseite erforderlich.|Sitzung
+	pwXXXs|beispiel.de|Der Cookie ist für die sichere Anmeldung und die Erkennung von Spam oder Missbrauch der Webseite erforderlich.|Sitzung
+	cmnstr|beispiel.de|Speichert den Zustimmungsstatus des Benutzers für Cookies.|180 Tage
+</details>
+
+### Funktionelle Cookies
+
+*Noch keine Beispiele verfügbar.*
+
+### Statistik-Cookies
+
+<details>
+	<summary>Matomo</summary>
+
+	---matomo|Matomo|Cookies, welche von Matomo verwendet werden um das Nutzerverhalten anonym zu sammeln.
+	_pk_ses|beispiel.de|Kurzlebige Cookies, die verwendet werden, um Daten für den Besuch vorübergehend zu speichern.|30 Minuten
+	_pk_id|beispiel.de|Wird verwendet, um einige Details über den Benutzer zu speichern, wie z. B. die eindeutige Besucher-ID.|400 Tage
+</details>
+
+<details>
+	<summary>Google Analytics</summary>
+
+	---ga|Google Analytics|Google Analytics erfasst das Nutzerverhalten auf dieser Website und sendet die Daten an Google, um uns Statistiken über Besucher und deren Verhalten zu zeigen|
+	_ga|Google|Registriert eine eindeutige ID, die verwendet wird, um statistische Daten dazu, wie der Besucher die Website nutzt, zu generieren.|2 Jahre
+	_gat|Google|Wird von Google Analytics verwendet, um die Anforderungsrate einzuschränken.|1 Tag
+	_gid|Google|Registriert eine eindeutige ID, die verwendet wird, um statistische Daten dazu, wie der Besucher die Website nutzt, zu generieren|1 Tag
+</details>
+
+### Marketing-Cookies
+
+*Noch keine Beispiele verfügbar.*
+
+### Externe Inhalte
+
+<details>
+	<summary>YouTube</summary>
+
+	---youtube|YouTube|Über die Video-Plattform "YouTube" eingebettete externe Videoinhalte. Bei Zustimmung findet ein Datenaustausch mit YouTube bzw. Google statt.|Wir verwendeten YouTube zur Darstellung von Videos auf unserer Seite.
+	yt-player-user-settings|youtube.com|Speichert Benutzereinstellungen für den Videoplayer (z.B. Autoplay, Lautstärke) und passt die Wiedergabeumgebung an.|Beständig
+	yt-remote-device-id|youtube.com|Speichert eine eindeutige ID, um das Gerät für die "Cast"-Funktion (Übertragung auf TV/andere Geräte) zu identifizieren.|Beständig
+	yt-remote-connected-devices|youtube.com|Speichert eine Liste der verbundenen Geräte, um die "Cast"-Funktion zu ermöglichen.|Beständig
+	yt.innertube::requests|youtube.com|Registriert eine eindeutige ID für Statistiken über gesehene Videos und API-Anfragen.|Beständig
+	yt.innertube::nextId|youtube.com|Speichert IDs für den Abruf nachfolgender Videostreams und technischer Anfragen.|Beständig
+	ytidb::LAST_RESULT_ENTRY_KEY|youtube.com|Speichert das letzte Suchergebnis oder die letzte Interaktion, um die Nutzererfahrung bei Rückkehr zu verbessern.|Beständig
+	yt-remote-cast-installed|youtube.com|Speichert die Information, ob die YouTube-Cast-Funktion (Chromecast) aktiviert/installiert ist.|Sitzung
+	yt-remote-cast-available|youtube.com|Prüft während der Sitzung, ob eine Verbindung zu einem Cast-Gerät (z.B. Smart TV) möglich ist.|Sitzung
+	yt-remote-session-app|youtube.com|Speichert technische Informationen zur aktuellen Cast-Sitzung (verwendete App-Version).|Sitzung
+	yt-remote-session-name|youtube.com|Speichert den Namen der aktuellen Cast-Sitzung für die Gerätekommunikation.|Sitzung
+	yt-remote-fast-check-period|youtube.com|Steuert die Häufigkeit der technischen Überprüfung auf verfügbare Cast-Geräte.|Sitzung
+</details>
+
+<details>
+	<summary>Google Maps</summary>
+
+	---gmaps|Google Maps|Google Maps nutzt Cookies um Kartenfunktionen bereitzustellen, Nutzungsdaten zu erfassen und personalisierte Werbung anzuzeigen. Die Dienste werden erst nach Ihrer Zustimmung geladen|Die Anfahrt zu unserer Kanzlei stellen wir auf einer Karte von Google Maps dar. Dies erfordert Ihre Zustimmung.
+	NID|Google Maps|Dieses Cookie wird von Google im Rahmen der Nutzung von Google Maps verwendet. Das NID-Cookie enthält eine eindeutige ID, über die Google bevorzugte Einstellungen und andere Informationen speichert|6 Monate
+	1P_JAR|Google Maps|Dieses Cookie wird verwendet, um die Werbedienste von Google zu unterstützen|1 Monat
+	CONSENT|Google Maps|Enthält Informationen darüber, wie der Endbenutzer die Website verwendet und welche Werbung der Endbenutzer möglicherweise gesehen hat|20 Jahre
+	DV|Google Maps|Wird verwendet, um Benutzereinstellungen und -informationen zu speichern, wenn Seiten mit Google Maps darauf angezeigt werden|Session
+	CGIC|Google Maps|Wird verwendet, um Benutzereinstellungen und -informationen zu speichern, wenn Seiten mit Google Maps darauf angezeigt werden|6 Monate
+	__Secure-3PSID|Google Maps|Wird für Targetingzwecke verwendet, um ein Profil der Interessen der Website-Besucher zu erstellen|2 Jahre
+	SID|Google Maps|Wird zur individuellen Anpassung von Werbung in Google-Produkten verwendet|2 Jahre
+	SIDCC|Google Maps|Sicherheitscookie um die Benutzerdaten vor unauthorisiertem Zugriff zu schützen|1 Jahr
+	__Secure-3PAPISID|Google Maps|Wird für Targeting-Zwecke verwendet, um ein Profil der Interessen des Website-Besuchers zu erstellen|1 Jahr
+	__Secure-APISID|Google Maps|Wird für Targetingzwecke verwendet, um ein Profil der Interessen der Website-Besucher zu erstellen|3 Monate
+	__Secure-SSID|Google Maps|Wird verwendet, um Informationen über Website-Nutzung und gesehene Werbung zu speichern|3 Monate
+	HSID|Google Maps|Wird zu Sicherheitszwecken und für Targetingzwecke verwendet|2 Jahre
+	APISID|Google Maps|Wird für Targetingzwecke verwendet, um ein Profil der Interessen der Website-Besucher zu erstellen|2 Jahre
+	__Secure-HSID|Google Maps|Wird zu Sicherheitszwecken und für Targetingzwecke verwendet|3 Monate
+	SSID|Google Maps|Wird verwendet, um Informationen über Website-Nutzung und Werbung zu speichern|2 Jahre
+	SAPISID|Google Maps|Wird für Targetingzwecke verwendet, um ein Profil der Interessen der Website-Besucher zu erstellen|2 Jahre
+	ANID|Google Maps|Anonyme ID für Werbung auf google.com, sammelt Daten zu Browser, Betriebssystem und Clickstream|9 Monate
+	OTZ|Google Maps|Wird verwendet, um Benutzereinstellungen und -informationen zu speichern|2 Wochen
+	SEARCH_SAMESITE|Google Maps|Verhindert, dass der Browser dieses Cookie mit Cross-Site-Anfragen sendet, zum Schutz vor Informationslecks|6 Monate
+	SNID|Google Maps|Wird vom Google Maps-Modul zum Einfügen von Karten in die Seite verwendet|6 Monate
+	__Secure-3PSIDCC|Google Maps|Wird für Targeting-Zwecke verwendet, um ein Profil der Interessen des Website-Besuchers zu erstellen|1 Jahr
+	OGPC|Google Maps|Google verwendet dieses Cookie auf Seiten für Google Translate oder Google Maps Aktivitäten|2 Monate
+</details>
+
+## Technische Dokumentation (Konfiguration)
 
 Admin → Modules → CookieMonster
 
@@ -8,6 +105,8 @@ Admin → Modules → CookieMonster
 2. Cookie-Kategorien definieren
 3. Security Headers nach Bedarf
 4. Optional Google Analytics Property-ID
+
+Jedem Tracking-Code (GA, GTM, Matomo, Meta Pixel, LinkedIn) kann im Admin eine **Cookie-Kategorie** und eine **Cookie-ID** zugewiesen werden. Ist beides gesetzt, wird der Code nur ausgegeben, wenn genau diese Kategorie bzw. Subkategorie freigeschaltet ist. Ohne Zuweisung gilt wie bisher: Code wird bei Statistik-Zustimmung ausgegeben.
 
 ## Inhalte laden
 
@@ -185,6 +284,8 @@ Kategorien können Subkategorien haben (z.B. `external-youtube`, `marketing-face
 | vimeo_player | Vimeo Inc    | Video playback                       | Session                             |
 
 *Die letzte Spalte ist bei **Cookies** für die Dauer und bei **Cookie-Gruppen** für deren Hinweis da.*
+
+Die **ID** einer Gruppe (z.B. `youtube` aus `---youtube|…`) wird automatisch zum Subkategorie-Schlüssel. Sobald eine Gruppe in den Cookie-Daten einer Kategorie definiert ist, können `isUnlocked('external-youtube')` und `maskContent($html, 'external-youtube')` genutzt werden. Der **Hinweis** (4. Spalte bei Gruppen) wird in der Inhaltsmaske statt des allgemeinen Kategorie-Prompts angezeigt.
 
 <details>
 	<summary>Tabelle in Textform</summary>

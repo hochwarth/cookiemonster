@@ -73,8 +73,6 @@ namespace ProcessWire;
 		</svg>
 	</button>
 
-	</button>
-
 	<dialog
 		id="cmnstr-dialog"
 		class="cmnstr"
