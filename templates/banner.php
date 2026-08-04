@@ -95,7 +95,7 @@ namespace ProcessWire;
 					</summary>
 
 					<div class="cmnstr-category-content">
-						<p><?= \nl2br($body); ?></p>
+						<p class="cmnstr-category-description"><?= \nl2br($body); ?></p>
 					</div>
 				</details>
 
