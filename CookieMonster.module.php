@@ -48,7 +48,7 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 	/**
 	 * Liefert die statischen Basisdaten aller Cookie-Kategorien (Schlüssel und Standardtitel)
 	 *
-	 * @return array<string, string> Array von Kategorie-Schlüsseln und deren Standardtitel
+	 * @return array<string, array{title: string, consent: string[]}> Array von Kategorie-Schlüsseln zu Titel und zugehörigen Google-Consent-Typen
 	 */
 	private function _getBaseCategories()
 	{
@@ -1248,7 +1248,7 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 	 */
 	public function renderCookieTable($category = [])
 	{
-		return $this->renderCookieTemplate($category, 'table.php');
+		return $this->renderCookieTemplate('table.php', $category);
 	}
 
 	/**
@@ -1259,17 +1259,17 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 	 */
 	public function renderCookieList($category = [])
 	{
-		return $this->renderCookieTemplate($category, 'list.php');
+		return $this->renderCookieTemplate('list.php', $category);
 	}
 
 	/**
 	 * Rendert ein HTML-Template mit Cookies aus einem formatierten String-Feld
 	 *
-	 * @param array $category Cookie-Kategorie-Daten
 	 * @param string $template Template-Pfad
+	 * @param array $category Cookie-Kategorie-Daten
 	 * @return string Die gerenderte HTML-Tabelle oder leerer String
 	 */
-	private function renderCookieTemplate($category = [], $template)
+	private function renderCookieTemplate($template, $category = [])
 	{
 		$cookies = [];
 		$cookieField = '';
@@ -1282,20 +1282,20 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 		if (empty($cookieField)) {
 			$categoriesData = $this->buildCategoriesData();
 
-			foreach ($categoriesData as $category) {
-				if (isset($category['enabled']) && $category['enabled'] === false) {
+			foreach ($categoriesData as $categoryData) {
+				if (isset($categoryData['enabled']) && $categoryData['enabled'] === false) {
 					continue;
 				}
 
 				// Parse den Textinhalt dieser Kategorie in Gruppen
-				$parsedGroups = $this->parseCookieData($category['cookies']);
+				$parsedGroups = $this->parseCookieData($categoryData['cookies']);
 
 				if (!empty($parsedGroups)) {
 					$cookies[] = [
 						'type' => 'category',
-						'key' => $category['key'],
-						'title' => $category['title'],
-						'description' => $category['description'],
+						'key' => $categoryData['key'],
+						'title' => $categoryData['title'],
+						'description' => $categoryData['description'],
 						'groups' => $parsedGroups,
 					];
 				}
