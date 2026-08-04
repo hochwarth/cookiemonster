@@ -12,6 +12,11 @@ namespace ProcessWire;
 class CookieMonster extends WireData implements Module, ConfigurableModule
 {
 	/**
+	 * Aktuelle Version des Consent-Cookie-Schemas.
+	 */
+	private const CURRENT_COOKIE_VERSION = 440;
+
+	/**
 	 * CSP Nonce für die aktuelle Anfrage.
 	 *
 	 * @var string
@@ -300,6 +305,221 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 	}
 
 	/**
+	 * Ermittelt die kanonische Domain, unter der CookieMonster.js das Cookie setzt.
+	 *
+	 * @return string
+	 */
+	private function getCanonicalCookieDomain()
+	{
+		$host = \strtolower((string) ($_SERVER['HTTP_HOST'] ?? ''));
+
+		// Port entfernen (z.B. "www.example.de:8080" -> "www.example.de")
+		return \preg_replace('/:\d+$/', '', $host);
+	}
+
+	/**
+	 * Ermittelt alle Domain-Varianten, unter denen ein 'cmnstr'-Cookie gesetzt sein könnte
+	 * (kanonischer Host + eine Ebene höher). Kein führender Punkt: RFC 6265 behandelt
+	 * "Domain=.host" und "Domain=host" identisch.
+	 *
+	 * @param bool $excludeCanonical Kanonische Domain aus dem Ergebnis ausschließen
+	 * @return string[]
+	 */
+	private function getCookieDomainVariants($excludeCanonical = false)
+	{
+		$host = $this->getCanonicalCookieDomain();
+
+		if ($host === '') {
+			return [];
+		}
+
+		$variants = [$host];
+
+		$dotPos = \strpos($host, '.');
+		if ($dotPos !== false) {
+			$variants[] = \substr($host, $dotPos + 1);
+		}
+
+		if ($excludeCanonical) {
+			$variants = \array_values(\array_diff($variants, [$host]));
+		}
+
+		return $variants;
+	}
+
+	/**
+	 * Liefert die Optionen für ein bereits abgelaufenes 'cmnstr'-Cookie.
+	 *
+	 * @param string|null $domain Domain-Variante oder null für ein Host-only-Cookie
+	 * @return array<string, mixed>
+	 */
+	private function expiredCookieOptions($domain = null)
+	{
+		$options = [
+			'expires' => 1,
+			'path' => '/',
+			'secure' => (bool) $this->config->https,
+			'samesite' => 'Lax',
+		];
+
+		if ($domain !== null) {
+			$options['domain'] = $domain;
+		}
+
+		return $options;
+	}
+
+	/**
+	 * Löscht das 'cmnstr'-Cookie über alle bekannten Domain-Varianten hinweg.
+	 *
+	 * @return void
+	 */
+	private function purgeConsentCookie()
+	{
+		if (\headers_sent()) {
+			return;
+		}
+
+		// Host-only Cookie (keine Domain-Angabe) löschen
+		\setcookie('cmnstr', '', $this->expiredCookieOptions());
+
+		foreach ($this->getCookieDomainVariants() as $domain) {
+			\setcookie('cmnstr', '', $this->expiredCookieOptions($domain));
+		}
+	}
+
+	/**
+	 * Liest alle Werte eines Cookie-Namens direkt aus dem rohen 'Cookie'-Request-Header.
+	 *
+	 * @param string $name Cookie-Name
+	 * @return string[] Werte in Header-Reihenfolge (bereits urldekodiert)
+	 */
+	private function getRawCookieValues($name)
+	{
+		$rawHeader = (string) ($_SERVER['HTTP_COOKIE'] ?? '');
+
+		if ($rawHeader === '') {
+			return [];
+		}
+
+		$values = [];
+
+		foreach (\explode(';', $rawHeader) as $pair) {
+			$pair = \ltrim($pair);
+
+			if (\strpos($pair, "{$name}=") !== 0) {
+				continue;
+			}
+
+			$values[] = \urldecode(\substr($pair, \strlen($name) + 1));
+		}
+
+		return $values;
+	}
+
+	/**
+	 * Prüft anhand vom 'Cookie'-Request-Header, ob ein Cookie-Name mehrfach vorkommt.
+	 *
+	 * @param string $name Cookie-Name
+	 * @return bool true, wenn der Name mehr als einmal im Header vorkommt
+	 */
+	private function cookieHeaderHasDuplicate($name)
+	{
+		return \count($this->getRawCookieValues($name)) > 1;
+	}
+
+	/**
+	 * Sucht unter mehreren gleichnamigen 'cmnstr'-Cookies (Domain-Duplikaten) nach einem
+	 * Wert, der dem aktuellen Versions-Schema entspricht.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function findValidDuplicateCookieValue()
+	{
+		foreach ($this->getRawCookieValues('cmnstr') as $raw) {
+			try {
+				$decoded = \json_decode($raw, true, 512, \JSON_THROW_ON_ERROR);
+			} catch (\JsonException $e) {
+				continue;
+			}
+
+			if ($this->isCurrentCookieVersion($decoded)) {
+				return $decoded;
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * Bereinigt verwaiste 'cmnstr'-Cookies auf allen Domain-Varianten außer der
+	 * kanonischen - nur wenn ein Duplikat im Request erkannt wird.
+	 *
+	 * @return void
+	 */
+	private function purgeForeignDomainCookies()
+	{
+		if (\headers_sent() || !$this->cookieHeaderHasDuplicate('cmnstr')) {
+			return;
+		}
+
+		foreach ($this->getCookieDomainVariants(true) as $domain) {
+			\setcookie('cmnstr', '', $this->expiredCookieOptions($domain));
+		}
+	}
+
+	/**
+	 * Prüft, ob ein dekodierter Cookie-Inhalt dem aktuellen Versions-Schema entspricht.
+	 *
+	 * @param mixed $cookieValues Dekodierter Inhalt des 'cmnstr'-Cookies
+	 * @return bool
+	 */
+	private function isCurrentCookieVersion($cookieValues)
+	{
+		$version = \is_array($cookieValues) ? ($cookieValues['_version'] ?? null) : null;
+
+		return \is_int($version) && $version === self::CURRENT_COOKIE_VERSION;
+	}
+
+	/**
+	 * Dekodiert das 'cmnstr'-Cookie und löst dabei Domain-Duplikate auf (siehe
+	 * findValidDuplicateCookieValue()) - zentrale Stelle für alle Konsumenten.
+	 *
+	 * @return mixed Dekodierter Inhalt, oder null wenn kein Cookie vorhanden ist
+	 * @throws \JsonException bei kaputtem JSON
+	 */
+	private function decodeConsentCookie()
+	{
+		if (!$this->checkCookieExists()) {
+			return null;
+		}
+
+		$cookieValues = \json_decode($_COOKIE['cmnstr'], true, 512, \JSON_THROW_ON_ERROR);
+
+		if (!$this->isCurrentCookieVersion($cookieValues) && $this->cookieHeaderHasDuplicate('cmnstr')) {
+			$cookieValues = $this->findValidDuplicateCookieValue() ?? $cookieValues;
+		}
+
+		return $cookieValues;
+	}
+
+	/**
+	 * Validiert das 'cmnstr'-Cookie gegen das aktuelle Versions-Schema.
+	 *
+	 * @return array<string, mixed>|null null bei fehlendem, kaputtem oder veraltetem Cookie
+	 */
+	private function getValidatedConsentCookie()
+	{
+		try {
+			$cookieValues = $this->decodeConsentCookie();
+		} catch (\JsonException $e) {
+			return null;
+		}
+
+		return $this->isCurrentCookieVersion($cookieValues) ? $cookieValues : null;
+	}
+
+	/**
 	 * Verarbeitet die gespeicherte Cookie-Zustimmung aus dem 'cmnstr'-Cookie
 	 *
 	 * @return void
@@ -337,32 +557,17 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 		}
 
 		try {
-			$cookieValues = \json_decode($_COOKIE['cmnstr'], true, 512, \JSON_THROW_ON_ERROR);
+			$cookieValues = $this->decodeConsentCookie();
 
-			// Alten Cookie ohne _version löschen und abbrechen
-			if (!isset($cookieValues['_version'])) {
-				$host = $_SERVER['HTTP_HOST'];
-				\setcookie(
-					'cmnstr',
-					'',
-					[
-						'expires' => 1,
-						'path' => '/',
-						'domain' => ".{$host}",
-					]
-				);
+			// Cookie passt nicht ins Schema (kein Array, falsche/fehlende Version)
+			if (!$this->isCurrentCookieVersion($cookieValues)) {
+				$this->purgeConsentCookie();
 
-				$host = str_replace('www.', '', $host);
-				\setcookie(
-					'cmnstr',
-					'',
-					[
-						'expires' => 1,
-						'path' => '/',
-						'domain' => ".{$host}",
-					]
-				);
+				return;
 			}
+
+			// Verwaiste Cookies auf anderen Domains bereinigen
+			$this->purgeForeignDomainCookies();
 
 			// Flatten der hierarchischen Struktur
 			$flatConsent = $this->flattenCookieStructure($cookieValues);
@@ -399,6 +604,7 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 				$this->allowTracking = true;
 			}
 		} catch (\JsonException $e) {
+			$this->purgeConsentCookie();
 			$this->error($this->_('Malformed CookieMonster consent cookie detected. Resetting to default.'));
 		}
 	}
@@ -506,6 +712,13 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 			);
 		}
 
+		/** Aktuelle Cookie Version ins JS übergeben */
+		$output = \str_replace(
+			'</head>',
+			"<script nonce='{$this->cspNonce}'>window.CMNSTR_COOKIE_VERSION=" . self::CURRENT_COOKIE_VERSION . ';</script></head>',
+			$output
+		);
+
 		$output = \str_replace(
 			'</head>',
 			"<script nonce='{$this->cspNonce}' src='{$moduleUrl}assets/CookieMonster.js?v={$version}' type='module'></script></head>",
@@ -541,7 +754,7 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 			'label' => (string) $this->get("infolabel{$lang}"),
 			'body' => (string) $this->get("infotext{$lang}"),
 			'lang' => $lang,
-			'open' => $this->checkCookieExists(),
+			'open' => $this->getValidatedConsentCookie() !== null,
 			'buttonEdit' => (string) $this->get("buttontext_edit{$lang}"),
 			'buttonConfirm' => (string) $this->get("buttontext_confirm{$lang}"),
 			'buttonDecline' => (string) $this->get("buttontext_decline{$lang}"),
@@ -1154,17 +1367,13 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 	 */
 	public function isCategoryActive($categoryKey)
 	{
-		if (!$this->checkCookieExists()) {
+		$cookieData = $this->getValidatedConsentCookie();
+
+		if ($cookieData === null) {
 			return false;
 		}
 
-		// JSON decodieren & flach konvertieren
-		try {
-			$hierarchical = \json_decode($_COOKIE['cmnstr'], true, 512, \JSON_THROW_ON_ERROR);
-			$flat = $this->flattenCookieStructure($hierarchical);
-		} catch (\JsonException $e) {
-			return false;
-		}
+		$flat = $this->flattenCookieStructure($cookieData);
 
 		if (!empty($flat[$categoryKey])) {
 			return true;

@@ -306,14 +306,15 @@ async function setCookieMonster(setAll) {
 	}
 
 	// Speichere Cookie
-	const host = location.hostname;
 	const maxExpires = 180 * 24 * 60 * 60 * 1000;
 	const expiresDate = Date.now() + maxExpires;
 
-	const value = { ...hierarchicalOptions, _version: 431 };
+	// Wird vom CookieMonster Modul gesetzt
+	const cookieVersion = /** @type {*} */ (window).CMNSTR_COOKIE_VERSION ?? -1;
+	const value = { ...hierarchicalOptions, _version: cookieVersion };
 
 	await cmnstr.set({
-		domain: host,
+		domain: location.hostname,
 		name: "cmnstr",
 		value: JSON.stringify(value),
 		expires: expiresDate,

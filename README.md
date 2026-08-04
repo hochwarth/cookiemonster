@@ -1,4 +1,4 @@
-# CookieMonster 4.3.1
+# CookieMonster 4.4.0
 
 ## Inhaltsverzeichnis
 
@@ -107,6 +107,10 @@ Admin → Modules → CookieMonster
 4. Optional Google Analytics Property-ID
 
 Jedem Tracking-Code (GA, GTM, Matomo, Meta Pixel, LinkedIn) kann im Admin eine **Cookie-Kategorie** und eine **Cookie-ID** zugewiesen werden. Ist beides gesetzt, wird der Code nur ausgegeben, wenn genau diese Kategorie bzw. Subkategorie freigeschaltet ist. Ohne Zuweisung gilt wie bisher: Code wird bei Statistik-Zustimmung ausgegeben.
+
+### Cookie-Versionierung
+
+Das `cmnstr`-Cookie speichert intern eine Schema-Version (`CURRENT_COOKIE_VERSION` in `CookieMonster.module.php`). Bei jeder Änderung an der Kategorien-Struktur (Kategorie hinzufügen/entfernen/umbenennen) muss diese Konstante erhöht werden. Cookies mit abweichender oder fehlender Version werden automatisch verworfen und der Nutzer erneut nach dessen Zustimmung gefragt.
 
 ## Inhalte laden
 
