@@ -314,7 +314,6 @@ async function setCookieMonster(setAll) {
 	const value = { ...hierarchicalOptions, _version: cookieVersion };
 
 	await cmnstr.set({
-		domain: location.hostname,
 		name: "cmnstr",
 		value: JSON.stringify(value),
 		expires: expiresDate,
