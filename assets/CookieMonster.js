@@ -44,17 +44,10 @@ const cmnstr = {
 						expires: undefined,
 						sameSite: "lax",
 						path: "/",
-				  }
+					}
 				: nameOrOptions;
 
-		const {
-			name,
-			value: cookieValue,
-			expires,
-			sameSite = "lax",
-			path = "/",
-			domain,
-		} = options;
+		const { name, value: cookieValue, expires, sameSite = "lax", path = "/", domain } = options;
 
 		let cookie = `${name}=${encodeURIComponent(cookieValue)}`;
 
@@ -298,11 +291,7 @@ async function setCookieMonster(setAll) {
 	// Lösche Analytics-Cookies wenn statistics nicht akzeptiert
 	const statisticsValue = hierarchicalOptions.statistics;
 	if (!statisticsValue) {
-		await Promise.all([
-			cmnstr.delete("_gat"),
-			cmnstr.delete("_ga"),
-			cmnstr.delete("_gid"),
-		]);
+		await Promise.all([cmnstr.delete("_gat"), cmnstr.delete("_ga"), cmnstr.delete("_gid")]);
 	}
 
 	// Speichere Cookie
