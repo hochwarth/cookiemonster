@@ -14,7 +14,7 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
     /**
      * Aktuelle Version des Consent-Cookie-Schemas.
      */
-    private const CURRENT_COOKIE_VERSION = 441;
+    private const CURRENT_COOKIE_VERSION = 442;
 
     /**
      * CSP Nonce für die aktuelle Anfrage.
@@ -966,8 +966,10 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
         if ($this->get('matomo_enabled')) {
             $category = $this->get('matomo_cookie_category');
             $cookie = $this->get('matomo_cookie_id');
+            $cookieless = $this->get('matomo_cookieless');
+            $unlocked = $this->isUnlocked("{$category}-{$cookie}") ?? $this->allowTracking;
 
-            if ($this->isUnlocked("{$category}-{$cookie}") ?? $this->allowTracking) {
+            if ($cookieless === 'cookieless' || $cookieless === 'fallback' || $unlocked) {
                 $trackingHead .= $this->addMatomoTrackingCode();
                 $trackingBody .= $this->addMatomoTrackingCode(true);
             }
@@ -1042,11 +1044,17 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
      */
     public function addMatomoTrackingCode($noScript = false)
     {
+        $category = $this->get('matomo_cookie_category');
+        $cookie = $this->get('matomo_cookie_id');
+        $cookieless = (string) $this->get('matomo_cookieless');
+        $unlocked = $this->isUnlocked("{$category}-{$cookie}") ?? $this->allowTracking;
+
         return $this->renderTemplate('tags/matomo.php', [
             'matomoUrl' => (string) $this->get('matomo_url'),
             'documentTitle' => (string) $this->get('matomo_documenttitle'),
             'siteId' => (string) $this->get('matomo_siteid'),
             'shareTracking' => (bool) $this->get('matomo_sharetracking'),
+            'useCookies' => $cookieless === '' || ($cookieless === 'fallback' && $unlocked),
             'shareDomain' => (string) $this->get('matomo_sharedomain'),
             'cspNonce' => (string) $this->cspNonce,
             'noScript' => (bool) $noScript,
@@ -1470,6 +1478,7 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
             'buttonAccept' => (string) $this->get("buttontext_accept{$lang}"),
             'privacyPage' => $privacyPage,
             'prompt' => $prompt,
+            'info' => (string) $this->get("mask_info{$lang}"),
         ]);
     }
 
