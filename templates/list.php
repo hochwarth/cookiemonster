@@ -16,16 +16,16 @@ namespace ProcessWire;
 <ul class='cmnstr-list'>
 	<?php foreach ($cookies as $category): ?>
 		<?php
-		$isEssential = ($category['key'] === 'essential');
-		?>
+        $isEssential = ($category['key'] === 'essential');
+        ?>
 		<li class="cmnstr-category">
 			<?php if (!empty($category['groups'])): ?>
 				<ul class='cmnstr-groups' data-parent="<?= $category['key'] ?>">
 					<?php foreach ($category['groups'] as $group): ?>
 						<?php
-						$groupId = "{$category['key']}-{$group['id']}";
-						$isChecked = $cmnstr->isUnlocked($groupId);
-						?>
+                        $groupId = "{$category['key']}-{$group['id']}";
+                        $isChecked = $cmnstr->isUnlocked($groupId);
+                        ?>
 						<li class='cmnstr-group'>
 							<div class="cmnstr-grid">
 								<div class="cmnstr-group-info">

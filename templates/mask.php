@@ -6,6 +6,7 @@ namespace ProcessWire;
 
 /**
  * @var string $prompt
+ * @var string $info
  * @var string $buttonEdit
  * @var string $buttonAccept
  * @var Page|NullPage $privacyPage
@@ -34,7 +35,7 @@ namespace ProcessWire;
 
 	<?php if ($privacyPage->id): ?>
 		<p class="cmnstr-small">
-			<?= __('Weitere Informationen finden Sie hier:'); ?>
+			<?= $info; ?>
 			<a href="<?= $privacyPage->url ?>" class="cmnstr-link"><?= $privacyPage->title ?></a>
 		</p>
 	<?php endif; ?>
