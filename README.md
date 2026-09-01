@@ -46,9 +46,47 @@
 	_gid|Google|Registriert eine eindeutige ID, die verwendet wird, um statistische Daten dazu, wie der Besucher die Website nutzt, zu generieren|1 Tag
 </details>
 
+<details>
+	<summary>Google Tag Manager (Statistik)</summary>
+
+	---gtm|Google Tag Manager|Über den Google Tag Manager werden – je nachdem, welchen Kategorien Sie zustimmen – Statistik- und/oder Marketing-Tags von Google geladen (u. a. Google Analytics sowie Google Ads, Conversion Linker). Der Tag Manager selbst überträgt nur die Daten, denen Sie tatsächlich zugestimmt haben.|Wir nutzen den Google Tag Manager u. a. zur statistischen Auswertung der Websitenutzung.
+	_ga|Google|Registriert eine eindeutige ID, die verwendet wird, um statistische Daten dazu, wie der Besucher die Website nutzt, zu generieren.|2 Jahre
+	_ga_<container-id>|Google|Wird von Google Analytics 4 verwendet, um den Sitzungsstatus zu speichern.|2 Jahre
+</details>
+
 ### Marketing-Cookies
 
-*Noch keine Beispiele verfügbar.*
+<details>
+	<summary>Google Tag Manager (Marketing)</summary>
+
+	---gtm|Google Tag Manager|Über den Google Tag Manager werden – je nachdem, welchen Kategorien Sie zustimmen – Statistik- und/oder Marketing-Tags von Google geladen (u. a. Google Analytics sowie Google Ads, Conversion Linker). Der Tag Manager selbst überträgt nur die Daten, denen Sie tatsächlich zugestimmt haben.|Wir nutzen den Google Tag Manager zur Steuerung von Marketing- und Conversion-Tracking.
+	_gcl_au|Google|Speichert eine pseudonyme Kennung zu Anzeigenklicks, um Conversions einer Google-Ads-Kampagne zuzuordnen (Conversion Linker).|90 Tage
+	_gcl_aw|Google|Speichert die Google-Klick-ID (gclid) aus der Anzeigen-URL zur Conversion-Zuordnung.|90 Tage
+	_gcl_gs|Google|Speichert Klickinformationen aus Google-Anzeigen für die Conversion-Messung.|90 Tage
+	_gcl_dc|Google|Speichert Klickinformationen aus Campaign Manager / Display & Video 360 (dclid).|90 Tage
+</details>
+
+<details>
+	<summary>Meta Pixel (Facebook/Instagram)</summary>
+
+	---meta|Meta Pixel|Der Meta Pixel (ehemals Facebook Pixel) misst die Wirksamkeit von Werbeanzeigen anhand der Aktionen, die Besucher auf unserer Website ausführen. Bei Zustimmung findet ein Datenaustausch mit Meta (Facebook/Instagram) statt.|Wir nutzen den Meta Pixel zur Erfolgsmessung unserer Facebook- und Instagram-Werbeanzeigen.
+	_fbp|Meta (Facebook)|Wird vom Meta Pixel gesetzt, um Besucher über mehrere Aufrufe und Geräte hinweg wiederzuerkennen und Werbeanzeigen auf Facebook und Instagram auszuliefern.|3 Monate
+	_fbc|Meta (Facebook)|Speichert die Facebook-Klick-ID (fbclid) aus der Anzeigen-URL, um einen Websitebesuch der Werbeanzeige zuzuordnen, auf die geklickt wurde.|3 Monate
+	fr|Meta (Facebook)|Wird zur Anzeigenauslieferung bzw. zum Retargeting verwendet und ermöglicht personalisierte Werbung auf Basis des Nutzerverhaltens.|3 Monate
+</details>
+
+<details>
+	<summary>LinkedIn Insight Tag</summary>
+
+	---linkedin|LinkedIn Insight Tag|Das LinkedIn Insight Tag ermöglicht Kampagnen-Reporting sowie das Wiedererkennen von Websitebesuchern für Retargeting-Zwecke über die LinkedIn-Werbeplattform. Bei Zustimmung findet ein Datenaustausch mit LinkedIn statt.|Wir nutzen das LinkedIn Insight Tag zur Erfolgsmessung unserer LinkedIn-Werbeanzeigen.
+	bcookie|LinkedIn|Browser-Identifier-Cookie zur eindeutigen Wiedererkennung von Geräten, u. a. zur Missbrauchserkennung.|1 Jahr
+	bscookie|LinkedIn|Sicherheits-Cookie zur Absicherung von LinkedIn-Anmeldungen bei eingebetteten Inhalten (Secure Browsing).|1 Jahr
+	lidc|LinkedIn|Wird zur Steuerung des Routings an LinkedIn-Rechenzentren verwendet.|24 Stunden
+	li_gc|LinkedIn|Speichert die Zustimmung eines Gast-Nutzers zur Verwendung nicht notwendiger Cookies.|6 Monate
+	li_sugr|LinkedIn|Wird zur probabilistischen Zuordnung eines Nutzers über mehrere Geräte hinweg verwendet (Cross-Device-Attribution).|90 Tage
+	UserMatchHistory|LinkedIn|Wird für Retargeting-Zwecke (LinkedIn Ads) genutzt, um den letzten Synchronisierungszeitpunkt zu speichern.|30 Tage
+	AnalyticsSyncHistory|LinkedIn|Speichert den Zeitpunkt der letzten Synchronisierung mit den LinkedIn-Analytics-Diensten.|30 Tage
+</details>
 
 ### Externe Inhalte
 
