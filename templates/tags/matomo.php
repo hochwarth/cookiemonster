@@ -24,6 +24,7 @@ namespace ProcessWire;
 		_paq.push(["setDocumentTitle", <?= $documentTitle ? "'{$documentTitle}'" : 'document.title'; ?>]);
 		<?php if (!$useCookies): ?>
 			_paq.push(["disableCookies"]);
+			_paq.push(["disableBrowserFeatureDetection"]);
 		<?php endif; ?>
 		<?php if ($shareTracking): ?>
 			_paq.push(["setCookieDomain", "<?= $shareDomain; ?>"]);
