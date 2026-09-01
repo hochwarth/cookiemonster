@@ -18,24 +18,18 @@ class TextformatterCookieTable extends Textformatter implements Module
 
     public function formatValue(Page $page, Field $field, &$str): void
     {
-        $cm = $this->modules->get('CookieMonster');
-
-        if ($this->languages) {
-            $userLanguage = $this->user->language;
-            $lang = $userLanguage->isDefault() ? '' : "__$userLanguage->id";
-        } else {
-            $lang = '';
-        }
+        /** @var CookieMonster|null $cmnstr */
+        $cmnstr = $this->modules->get('CookieMonster');
 
         $needle = '[[cookie-table]]';
         if (strpos($str, $needle) !== false) {
-            $output = $cm->renderCookieTable();
+            $output = $cmnstr->renderCookieTable();
             $str = str_replace($needle, $output, $str);
         }
 
         $needle = '[[cookie-list]]';
         if (strpos($str, $needle) !== false) {
-            $output = $cm->renderCookieList();
+            $output = $cmnstr->renderCookieList();
             $str = str_replace($needle, $output, $str);
         }
     }

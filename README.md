@@ -1,4 +1,4 @@
-# CookieMonster 4.4.2
+# CookieMonster 4.5.0
 
 ## Inhaltsverzeichnis
 
@@ -106,7 +106,9 @@ Admin → Modules → CookieMonster
 3. Security Headers nach Bedarf
 4. Optional Google Analytics Property-ID
 
-Jedem Tracking-Code (GA, GTM, Matomo, Meta Pixel, LinkedIn) kann im Admin eine **Cookie-Kategorie** und eine **Cookie-ID** zugewiesen werden. Ist beides gesetzt, wird der Code nur ausgegeben, wenn genau diese Kategorie bzw. Subkategorie freigeschaltet ist. Ohne Zuweisung gilt wie bisher: Code wird bei Statistik-Zustimmung ausgegeben.
+Jedem Tracking-Code (GA, GTM, Matomo, Meta Pixel, LinkedIn) können im Admin **eine oder mehrere Cookie-Kategorien** (Tag-Auswahlfeld) und eine **Cookie-ID** zugewiesen werden. Sind Kategorien und ID gesetzt, wird der Code ausgegeben, sobald **mindestens eine** der ausgewählten Kategorien bzw. Subkategorien freigeschaltet ist (ODER-Verknüpfung) – z.B. GTM sowohl an `statistics` als auch `marketing` hängen, wenn der Container sowohl Analytics- als auch Ads-Tags enthält. Ohne Zuweisung gilt wie bisher: Code wird bei Statistik-Zustimmung ausgegeben.
+
+Unabhängig davon wird auf jeder Seite mit aktivem GA oder GTM vor dem eigentlichen Tracking-Code immer ein `gtag('consent', 'default', …)`-Aufruf mit dem aktuellen Google Consent Mode v2 Zustand ausgegeben (`templates/tags/consent.php`). Dadurch respektieren auch Tags **innerhalb** eines GTM-Containers (z.B. Google Ads) den Consent-Zustand, selbst wenn der Container selbst z.B. nur wegen erteilter Marketing-Zustimmung lädt, Statistik aber abgelehnt wurde.
 
 ### Cookie-Versionierung
 

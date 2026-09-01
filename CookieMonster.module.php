@@ -14,7 +14,7 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
     /**
      * Aktuelle Version des Consent-Cookie-Schemas.
      */
-    private const CURRENT_COOKIE_VERSION = 442;
+    private const CURRENT_COOKIE_VERSION = 450;
 
     /**
      * CSP Nonce für die aktuelle Anfrage.
@@ -55,7 +55,7 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
         return [
             'essential' => [
                 'title' => $this->_('Notwendig Cookies'),
-                'consent' => ['security_storage', 'functionality_storage'],
+                'consent' => ['security_storage'],
             ],
             'functional' => [
                 'title' => $this->_('Funktionelle Cookies'),
@@ -273,7 +273,7 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
      * Prüft, ob eine Kategorie vollständig akzeptiert wurde.
      * Eine Kategorie gilt als vollständig akzeptiert, wenn:
      * - Sie direkt als true gespeichert ist, ODER
-     * - Alle ihre Unterkategorien true sind
+     * - Alle ihre konfigurierten Unterkategorien true sind
      *
      * @param string $categoryKey Der Kategorie-Schlüssel
      * @param array<string, bool> $flatConsent Flache Consent-Struktur
@@ -286,22 +286,21 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
             return true;
         }
 
-        // Prüfe ob alle Unterkategorien true sind
-        $prefix = "{$categoryKey}-";
-        $hasSubcategories = false;
-        $allSubcategoriesTrue = true;
+        $lang = $this->getLanguageSuffix();
+        $cookieText = (string) $this->get("{$categoryKey}_cookies{$lang}");
+        $subCategories = $this->extractSubCategories($cookieText, $categoryKey);
 
-        foreach ($flatConsent as $key => $value) {
-            if (\strpos($key, $prefix) === 0) {
-                $hasSubcategories = true;
-                if ($value !== true) {
-                    $allSubcategoriesTrue = false;
-                    break;
-                }
+        if (empty($subCategories)) {
+            return false;
+        }
+
+        foreach (\array_keys($subCategories) as $subKey) {
+            if (($flatConsent["{$categoryKey}-{$subKey}"] ?? false) !== true) {
+                return false;
             }
         }
 
-        return $hasSubcategories && $allSubcategoriesTrue;
+        return true;
     }
 
     /**
@@ -656,6 +655,41 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
     }
 
     /**
+     * Prüft, ob mindestens eine der angegebenen Cookie-Kategorien für eine Cookie-ID freigeschaltet ist (ODER-Verknüpfung)
+     *
+     * @param string|array|SelectableOptionArray|null $categories Eine oder mehrere Cookie-Kategorien
+     * @param string $cookie Die zugehörige Cookie-ID
+     * @return bool|null `true`, wenn mindestens eine Kategorie freigeschaltet ist, `false` wenn keine der (existierenden) Kategorien freigeschaltet ist, oder `null` wenn keine gültige Kategorie angegeben wurde (Fallback auf `allowTracking`)
+     */
+    private function isUnlockedForCategories($categories, $cookie)
+    {
+        if ($categories instanceof SelectableOptionArray) {
+            $categories = $categories->value;
+        }
+
+        $categories = \is_array($categories) ? $categories : [$categories];
+        $categories = \array_filter($categories, static function ($category) {
+            return $category !== null && $category !== '';
+        });
+
+        $result = null;
+
+        foreach ($categories as $category) {
+            $unlocked = $this->isUnlocked("{$category}-{$cookie}");
+
+            if ($unlocked === true) {
+                return true;
+            }
+
+            if ($unlocked !== null) {
+                $result = false;
+            }
+        }
+
+        return $result;
+    }
+
+    /**
      * Gibt ein Array aller Cookie-Kategorien zurück, denen der Benutzer zugestimmt hat
      *
      * @return string[] Array der zugestimmten Cookie-Kategorien-Schlüssel
@@ -936,38 +970,43 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
         $trackingHead = '';
         $trackingBody = '';
 
+        // Google Consent Mode v2
+        if ($this->get('gtm_id') || $this->get('ga_property_id')) {
+            $trackingHead .= $this->addConsentDefaultCode();
+        }
+
         if ($this->get('ga_property_id')) {
-            $category = $this->get('ga_cookie_category');
+            $categories = $this->get('ga_cookie_category');
             $cookie = $this->get('ga_cookie_id');
 
-            if ($this->isUnlocked("{$category}-{$cookie}") ?? $this->allowTracking) {
+            if ($this->isUnlockedForCategories($categories, $cookie) ?? $this->allowTracking) {
                 $trackingHead .= $this->addGATrackingCode();
                 $trackingBody .= $this->addGATrackingCode(true);
             }
         }
         if ($this->get('gtm_id')) {
-            $category = $this->get('gtm_cookie_category');
+            $categories = $this->get('gtm_cookie_category');
             $cookie = $this->get('gtm_cookie_id');
 
-            if ($this->isUnlocked("{$category}-{$cookie}") ?? $this->allowTracking) {
+            if ($this->isUnlockedForCategories($categories, $cookie) ?? $this->allowTracking) {
                 $trackingHead .= $this->addGTMTrackingCode();
                 $trackingBody .= $this->addGTMTrackingCode(true);
             }
         }
         if ($this->get('linkedin_insight_id')) {
-            $category = $this->get('linkedin_insight_cookie_category');
+            $categories = $this->get('linkedin_insight_cookie_category');
             $cookie = $this->get('linkedin_insight_cookie_id');
 
-            if ($this->isUnlocked("{$category}-{$cookie}") ?? $this->allowTracking) {
+            if ($this->isUnlockedForCategories($categories, $cookie) ?? $this->allowTracking) {
                 $trackingHead .= $this->addLinkedInTrackingCode();
                 $trackingBody .= $this->addLinkedInTrackingCode(true);
             }
         }
         if ($this->get('matomo_enabled')) {
-            $category = $this->get('matomo_cookie_category');
+            $categories = $this->get('matomo_cookie_category');
             $cookie = $this->get('matomo_cookie_id');
             $cookieless = $this->get('matomo_cookieless');
-            $unlocked = $this->isUnlocked("{$category}-{$cookie}") ?? $this->allowTracking;
+            $unlocked = $this->isUnlockedForCategories($categories, $cookie) ?? $this->allowTracking;
 
             if ($cookieless === 'cookieless' || $cookieless === 'fallback' || $unlocked) {
                 $trackingHead .= $this->addMatomoTrackingCode();
@@ -975,10 +1014,10 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
             }
         }
         if ($this->get('meta_pixel_id')) {
-            $category = $this->get('meta_pixel_cookie_category');
+            $categories = $this->get('meta_pixel_cookie_category');
             $cookie = $this->get('meta_pixel_cookie_id');
 
-            if ($this->isUnlocked("{$category}-{$cookie}") ?? $this->allowTracking) {
+            if ($this->isUnlockedForCategories($categories, $cookie) ?? $this->allowTracking) {
                 $trackingHead .= $this->addMetaTrackingCode();
                 $trackingBody .= $this->addMetaTrackingCode(true);
             }
@@ -1000,9 +1039,24 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
     {
         return $this->renderTemplate('tags/ga.php', [
             'propertyId' => (string) $this->get('ga_property_id'),
-            'googleConsentStates' => $this->getGoogleConsentStates(),
             'cspNonce' => (string) $this->cspNonce,
             'noScript' => (bool) $noScript,
+        ]);
+    }
+
+    /**
+     * Fügt den Google Consent Mode v2 Default-Zustand zum gerenderten Seiten-Output hinzu
+     *
+     * Muss vor GTM/gtag im `<head>` stehen, damit alle darüber geladenen Google-Tags
+     * (auch innerhalb eines GTM-Containers, z.B. Google Ads) den Consent-Zustand von Anfang an respektieren.
+     *
+     * @return string
+     */
+    public function addConsentDefaultCode()
+    {
+        return $this->renderTemplate('tags/consent.php', [
+            'googleConsentStates' => $this->getGoogleConsentStates(),
+            'cspNonce' => (string) $this->cspNonce,
         ]);
     }
 
@@ -1044,10 +1098,10 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
      */
     public function addMatomoTrackingCode($noScript = false)
     {
-        $category = $this->get('matomo_cookie_category');
+        $categories = $this->get('matomo_cookie_category');
         $cookie = $this->get('matomo_cookie_id');
         $cookieless = (string) $this->get('matomo_cookieless');
-        $unlocked = $this->isUnlocked("{$category}-{$cookie}") ?? $this->allowTracking;
+        $unlocked = $this->isUnlockedForCategories($categories, $cookie) ?? $this->allowTracking;
 
         return $this->renderTemplate('tags/matomo.php', [
             'matomoUrl' => (string) $this->get('matomo_url'),
