@@ -16,6 +16,8 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
      */
     private const CURRENT_COOKIE_VERSION = 450;
 
+    public const SERVICE_FIELD_NAME = 'cmnstr_service';
+
     /**
      * CSP Nonce für die aktuelle Anfrage.
      *
@@ -90,7 +92,7 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
         }
 
         // Feld anlegen + Optionen füllen
-        $fieldName = 'cookiemonster_category';
+        $fieldName = self::SERVICE_FIELD_NAME;
         $field = $this->fields->get($fieldName);
 
         if (!$field || !$field->id) {
@@ -137,7 +139,7 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
             $this->message($this->_('Berechtigung "manage-cookie-monster" erfolgreich gelöscht.'));
         }
 
-        $fieldName = 'cookiemonster_category';
+        $fieldName = self::SERVICE_FIELD_NAME;
         $field = $this->fields->get($fieldName);
         if ($field->id) {
             foreach ($field->getFieldgroups() as $fieldgroup) {
@@ -149,6 +151,28 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
             $this->fields->delete($field);
             $this->message($this->_("Feld '{$fieldName}' erfolgreich gelöscht."));
         }
+    }
+
+    /**
+     * Benennt das Select Feld korrekt um.
+     */
+    public function ___upgrade($fromVersion, $toVersion)
+    {
+        $oldFieldName = 'cookiemonster_category';
+        $newFieldName = self::SERVICE_FIELD_NAME;
+
+        if ($this->fields->get($newFieldName)) {
+            return;
+        }
+
+        $oldField = $this->fields->get($oldFieldName);
+        if (!($oldField instanceof Field)) {
+            return;
+        }
+
+        $oldField->name = $newFieldName;
+        $this->fields->save($oldField);
+        $this->message($this->_("Feld '{$oldFieldName}' zu '{$newFieldName}' umbenannt."));
     }
 
     /**
@@ -193,7 +217,7 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 
         // Nur ausführen, wenn CookieMonster-Config gespeichert wurde
         if ($moduleName === $this->className) {
-            $this->updateCookieCategoryField($data);
+            $this->syncServiceOptions($data);
         }
     }
 
@@ -349,7 +373,7 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
     /**
      * Liefert die Optionen für ein bereits abgelaufenes 'cmnstr'-Cookie.
      *
-     * @param string|null $domain Domain-Variante oder null für ein Host-only-Cookie
+     * @param ?string $domain Domain-Variante oder null für ein Host-only-Cookie
      * @return array<string, mixed>
      */
     private function expiredCookieOptions($domain = null)
@@ -431,7 +455,7 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
      * Sucht unter mehreren gleichnamigen 'cmnstr'-Cookies (Domain-Duplikaten) nach einem
      * Wert, der dem aktuellen Versions-Schema entspricht.
      *
-     * @return array<string, mixed>|null
+     * @return ?array<string, mixed>
      */
     private function findValidDuplicateCookieValue()
     {
@@ -505,7 +529,7 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
     /**
      * Validiert das 'cmnstr'-Cookie gegen das aktuelle Versions-Schema.
      *
-     * @return array<string, mixed>|null null bei fehlendem, kaputtem oder veraltetem Cookie
+     * @return ?array<string, mixed> null bei fehlendem, kaputtem oder veraltetem Cookie
      */
     private function getValidatedConsentCookie()
     {
@@ -611,7 +635,7 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
     /**
      * Prüft, ob eine spezifische Cookie-Kategorie vom Benutzer zugestimmt wurde
      *
-     * @param string|SelectableOptionArray|null $categoryKey Der Schlüssel der Cookie-Kategorie (z.B. 'essential', 'external-youtube')
+     * @param ?string|SelectableOptionArray $categoryKey Der Schlüssel der Cookie-Kategorie (z.B. 'essential', 'external-youtube')
      * @return bool `true`, wenn die Kategorie freigeschaltet ist, sonst `false`
      */
     public function isUnlocked($categoryKey)
@@ -657,9 +681,9 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
     /**
      * Prüft, ob mindestens eine der angegebenen Cookie-Kategorien für eine Cookie-ID freigeschaltet ist (ODER-Verknüpfung)
      *
-     * @param string|array|SelectableOptionArray|null $categories Eine oder mehrere Cookie-Kategorien
+     * @param ?string|array|SelectableOptionArray $categories Eine oder mehrere Cookie-Kategorien
      * @param string $cookie Die zugehörige Cookie-ID
-     * @return bool|null `true`, wenn mindestens eine Kategorie freigeschaltet ist, `false` wenn keine der (existierenden) Kategorien freigeschaltet ist, oder `null` wenn keine gültige Kategorie angegeben wurde (Fallback auf `allowTracking`)
+     * @return ?bool `true`, wenn mindestens eine Kategorie freigeschaltet ist, `false` wenn keine der (existierenden) Kategorien freigeschaltet ist, oder `null` wenn keine gültige Kategorie angegeben wurde (Fallback auf `allowTracking`)
      */
     private function isUnlockedForCategories($categories, $cookie)
     {
@@ -1307,7 +1331,7 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
     /**
      * Rendert eine HTML-Tabelle von Cookies aus einem formatierten String-Feld
      *
-     * @param array|null $category Cookie-Kategorie-Daten
+     * @param ?array $category Cookie-Kategorie-Daten
      * @return string Die gerenderte HTML-Tabelle oder leerer String
      */
     public function renderCookieTable($category = [])
@@ -1318,7 +1342,7 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
     /**
      * Rendert eine HTML-Liste von Cookies aus einem formatierten String-Feld
      *
-     * @param array|null $category Cookie-Kategorie-Daten
+     * @param ?array $category Cookie-Kategorie-Daten
      * @return string Die gerenderte HTML-Tabelle oder leerer String
      */
     public function renderCookieList($category = [])
@@ -1457,7 +1481,7 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
      * Maskiert externen Inhalt bis zur Zustimmung
      *
      * @param string $html Der zu maskierende HTML-Inhalt
-     * @param string|SelectableOptionArray|null $category Cookie-Kategorie (z.B. 'external', 'external-youtube')
+     * @param ?string|SelectableOptionArray $category Cookie-Kategorie (z.B. 'external', 'external-youtube')
      * @return string Maskierter oder normaler Inhalt
      */
     public function maskContent($html, $category)
