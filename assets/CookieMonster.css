@@ -75,7 +75,6 @@
 	hyphens: auto;
 	color-scheme: light;
 	overflow-wrap: break-word;
-	overscroll-behavior: contain;
 	box-shadow:
 		0 0.2em 0.25em rgb(50 50 50 / 7.5%),
 		0 0.1em 0.125em rgb(50 50 50 / 7.5%);
@@ -88,6 +87,10 @@
 	inline-size: min(92.5%, 75ch + 12.5svi);
 	margin: auto;
 	overflow-y: auto;
+}
+
+.cmnstr[open]:modal {
+	overscroll-behavior: contain;
 }
 
 .cmnstr::backdrop {
@@ -454,7 +457,7 @@
 		color var(--cmnstr-transition);
 }
 
-.cmnstr-alert[open] + .cmnstr-button-hover {
+#cmnstr-alert[open] + .cmnstr-button-hover {
 	display: none;
 }
 

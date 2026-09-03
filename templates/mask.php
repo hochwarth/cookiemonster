@@ -14,7 +14,7 @@ namespace ProcessWire;
 
 ?>
 
-<div class="cmnstr-content-mask" role="region">
+<div class="cmnstr-content-mask">
 	<p><?= $prompt ?></p>
 
 	<div class="cmnstr-button-list">

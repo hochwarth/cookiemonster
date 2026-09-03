@@ -24,7 +24,7 @@ namespace ProcessWire;
 
 <section aria-labelledby="cmnstr-title">
 	<dialog
-		<?= $open ? '' : 'open'; ?>
+		<?= $open ? 'open' : ''; ?>
 		id="cmnstr-alert"
 		class="cmnstr"
 		aria-labelledby="cmnstr-title">

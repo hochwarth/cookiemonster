@@ -783,12 +783,14 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
         /** @var Page|NullPage $privacyPage */
         $privacyPage = $this->pages->get($privacyPageId);
 
+        $isLegalPage = $this->page->id === $imprintPageId || $this->page->id === $privacyPageId;
+
         $data = [
             'title' => (string) $this->get("titletext{$lang}"),
             'label' => (string) $this->get("infolabel{$lang}"),
             'body' => (string) $this->get("infotext{$lang}"),
             'lang' => $lang,
-            'open' => $this->getValidatedConsentCookie() !== null,
+            'open' => !$this->getValidatedConsentCookie() && !$isLegalPage,
             'buttonEdit' => (string) $this->get("buttontext_edit{$lang}"),
             'buttonConfirm' => (string) $this->get("buttontext_confirm{$lang}"),
             'buttonDecline' => (string) $this->get("buttontext_decline{$lang}"),
