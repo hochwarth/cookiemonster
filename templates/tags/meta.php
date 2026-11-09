@@ -6,10 +6,13 @@ namespace ProcessWire;
 
 /**
  * @var string $pixel
- * @var string $event - 'PageView'
+ * @var string $event
  * @var string $cspNonce
  * @var bool $noScript
+ * @var Sanitizer $sanitizer
  */
+$pixel = $sanitizer->digits($pixel);
+$event = $sanitizer->name($event) ?: 'PageView';
 
 ?>
 
@@ -24,12 +27,12 @@ namespace ProcessWire;
 		t.src=v;s=b.getElementsByTagName(e)[0];
 		s.parentNode.insertBefore(t,s)}(window, document,'script',
 		'https://connect.facebook.net/en_US/fbevents.js');
-		fbq('init', '<?= $pixel ?>');
+		fbq('init', '<?= $pixel; ?>');
 		fbq('track', '<?= $event; ?>');
 	</script>
 <?php else: ?>
 	<noscript>
-		<img height="1" width="1" style="display:none"
-			src="https://www.facebook.com/tr?id=<?= $pixel; ?>&ev=<?= $event; ?>&noscript=1" />
+		<img height="1" width="1" class="cmnstr-sr-only" alt=""
+			src="https://www.facebook.com/tr?id=<?= $pixel; ?>&amp;ev=<?= $event; ?>&amp;noscript=1">
 	</noscript>
 <?php endif; ?>

@@ -8,7 +8,9 @@ namespace ProcessWire;
  * @var string $gtmId
  * @var string $cspNonce
  * @var bool $noScript
+ * @var Sanitizer $sanitizer
  */
+$gtmId = $sanitizer->name($gtmId);
 
 ?>
 
@@ -31,5 +33,5 @@ namespace ProcessWire;
 	</script>
 <?php else: ?>
 	<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=<?= $gtmId; ?>"
-	height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+	height="0" width="0" class="cmnstr-sr-only"></iframe></noscript>
 <?php endif; ?>

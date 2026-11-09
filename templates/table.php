@@ -5,30 +5,33 @@ declare(strict_types=1);
 namespace ProcessWire;
 
 /**
- * @var array $headers Assoziatives Array der Header ['key' => 'Label']
- * @var array $cookies Das Array mit den gruppierten Cookies
+ * @var array<string, string> $headers
+ * @var array $cookies
+ * @var CookieMonster $cmnstr
  * @var Sanitizer $sanitizer
  */
 
 ?>
 
-<div class='cmnstr-data-wrap'>
+<div class='cmnstr-data-wrap' role="region" tabindex="0" aria-label="<?= $sanitizer->entities($cmnstr->text('table_label')); ?>">
 	<table class='cmnstr-table'>
+		<caption class="cmnstr-sr-only"><?= $sanitizer->entities($cmnstr->text('table_label')); ?></caption>
+
 		<thead>
 			<tr>
 				<?php foreach ($headers as $label): ?>
-					<th><?= $sanitizer->entities($label); ?></th>
+					<th scope="col"><?= $sanitizer->entities($label); ?></th>
 				<?php endforeach; ?>
 			</tr>
 		</thead>
 
-		<tbody>
-			<?php foreach ($cookies as $category): ?>
+		<?php foreach ($cookies as $category): ?>
+			<tbody>
 				<?php if (!empty($category['title'])): ?>
 					<tr class="cmnstr-category-row">
-						<td colspan="<?= count($headers); ?>" class="cmnstr-category-cell">
-							<strong><?= $sanitizer->entities($category['title']); ?></strong>
-						</td>
+						<th scope="colgroup" colspan="<?= \count($headers); ?>" class="cmnstr-category-cell">
+							<?= $sanitizer->entities($category['title']); ?>
+						</th>
 					</tr>
 				<?php endif; ?>
 
@@ -36,26 +39,30 @@ namespace ProcessWire;
 
 					<?php if (!empty($group['title'])): ?>
 						<tr class="cmnstr-group-row">
-							<td colspan="<?= count($headers); ?>" class="cmnstr-group-cell">
-								<strong><?= $sanitizer->entities($group['title']); ?></strong>
+							<th scope="colgroup" colspan="<?= \count($headers); ?>" class="cmnstr-group-cell">
+								<?= $sanitizer->entities($group['title']); ?>
 								<?php if (!empty($group['description'])): ?>
 									<br><small><?= $sanitizer->entities($group['description']); ?></small>
 								<?php endif; ?>
-							</td>
+							</th>
 						</tr>
 					<?php endif; ?>
 
 					<?php foreach ($group['cookies'] as $cookie): ?>
 						<tr>
 							<?php foreach ($headers as $key => $label): ?>
-								<td data-label="<?= $sanitizer->entities($label); ?>">
-									<?= $sanitizer->entities($cookie[$key] ?? ''); ?>
-								</td>
+								<?php if ($key === 'name'): ?>
+									<th scope="row" class="cmnstr-cookie-name"><?= $sanitizer->entities($cookie[$key] ?? ''); ?></th>
+								<?php else: ?>
+									<td><?= $sanitizer->entities($cookie[$key] ?? ''); ?></td>
+								<?php endif; ?>
 							<?php endforeach; ?>
 						</tr>
 					<?php endforeach; ?>
 				<?php endforeach; ?>
-			<?php endforeach; ?>
-		</tbody>
+			</tbody>
+		<?php endforeach; ?>
 	</table>
 </div>
+
+<?= $cmnstr->renderConsentIdPlaceholder(); ?>

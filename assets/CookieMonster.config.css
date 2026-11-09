@@ -1,0 +1,149 @@
+.langTabs > .Inputfields > .InputfieldFieldset > .InputfieldContent {
+	padding-block-start: 20px;
+}
+
+textarea:has(+ .cmnstr-hl-editor) {
+	display: none;
+}
+
+/* Höher als die aus dem Theme übernommenen textarea-Regeln */
+.Inputfield div.cmnstr-hl-editor.uk-textarea {
+	position: relative;
+	box-sizing: content-box;
+	inline-size: auto;
+	block-size: calc(var(--cmnstr-rows, 5) * 1lh);
+	overflow: auto;
+	resize: vertical;
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
+	cursor: text;
+}
+
+.cmnstr-hl-editor::selection {
+	color: HighlightText;
+	background-color: Highlight;
+}
+
+.cmnstr-hl-editor.cmnstr-hl-empty::before {
+	content: attr(aria-placeholder);
+	position: absolute;
+	color: var(--cmnstr-placeholder);
+	pointer-events: none;
+}
+
+/* Grundfarben in gleicher Helligkeit (hell 45 %, dunkel 86 %); Hintergründe werden daraus gemischt */
+.cmnstr-hl-editor {
+	--cmnstr-ink: light-dark(oklch(0% 0 0), oklch(100% 0 0));
+	--cmnstr-placeholder: light-dark(oklch(52% 0.05 260), oklch(75% 0.05 260));
+	--cmnstr-service: light-dark(oklch(50% 0.2 312), oklch(85% 0.1 312));
+	--cmnstr-name: light-dark(oklch(50% 0.15 245), oklch(85% 0.1 245));
+	--cmnstr-provider: light-dark(oklch(50% 0.1 55), oklch(85% 0.1 55));
+	--cmnstr-wildcard: light-dark(oklch(50% 0.175 25), oklch(85% 0.125 25));
+	--cmnstr-duration: light-dark(oklch(50% 0.125 150), oklch(85% 0.125 150));
+	--cmnstr-tint: 10%;
+	--cmnstr-shadow: 0.3px;
+}
+
+/* Altes AdminThemeUikit-Theme „Original“ */
+.AdminThemeUikitOriginal .cmnstr-hl-editor {
+	--cmnstr-tint: 7.5%;
+	--cmnstr-shadow: 0.1px;
+}
+
+::highlight(cmnstr-cookie) {
+	background-color: color-mix(in oklab, var(--cmnstr-ink) 4%, transparent);
+}
+
+/* ::highlight() erlaubt nur Farben, Dekoration und Schatten; der Schatten ersetzt fetten Text */
+::highlight(cmnstr-service) {
+	color: var(--cmnstr-service);
+	background-color: color-mix(in oklab, var(--cmnstr-service) var(--cmnstr-tint), transparent);
+	text-shadow: var(--cmnstr-shadow) 0 0 currentcolor;
+}
+
+::highlight(cmnstr-name) {
+	color: var(--cmnstr-name);
+	background-color: color-mix(in oklab, var(--cmnstr-name) var(--cmnstr-tint), transparent);
+	text-shadow: var(--cmnstr-shadow) 0 0 currentcolor;
+}
+
+::highlight(cmnstr-provider) {
+	color: var(--cmnstr-provider);
+	background-color: color-mix(in oklab, var(--cmnstr-provider) var(--cmnstr-tint), transparent);
+	text-shadow: var(--cmnstr-shadow) 0 0 currentcolor;
+}
+
+::highlight(cmnstr-wildcard) {
+	color: var(--cmnstr-wildcard);
+	background-color: color-mix(in oklab, var(--cmnstr-wildcard) var(--cmnstr-tint), transparent);
+}
+
+::highlight(cmnstr-separator) {
+	color: var(--cmnstr-ink);
+}
+
+::highlight(cmnstr-duration) {
+	color: var(--cmnstr-duration);
+	background-color: color-mix(in oklab, var(--cmnstr-duration) var(--cmnstr-tint), transparent);
+	text-shadow: var(--cmnstr-shadow) 0 0 currentcolor;
+}
+
+.cmnstr-stats {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-start;
+	gap: 2rem 3rem;
+}
+
+.cmnstr-stats-block {
+	flex: 1 1 22rem;
+	max-inline-size: 36rem;
+}
+
+.cmnstr-stats-block h3 {
+	margin-block: 0 0.25rem;
+	line-height: 1.2;
+}
+
+.cmnstr-stats-table.AdminDataTable > * > tr {
+	border-block: 0;
+}
+
+.cmnstr-stats-table.AdminDataTable :is(th, td) {
+	border-block-end: 1px solid var(--pw-border-color, #ddd);
+}
+
+.cmnstr-stats-table {
+	margin: 0;
+	font-variant-numeric: tabular-nums;
+}
+
+.cmnstr-stats-table .cmnstr-stats-num {
+	text-align: end;
+	white-space: nowrap;
+}
+
+.cmnstr-stats-table tfoot {
+	font-size: inherit;
+}
+
+.cmnstr-stats-table tfoot td:not(:first-child) {
+	text-align: end;
+	white-space: nowrap;
+}
+
+.cmnstr-stats-table tfoot td {
+	color: inherit;
+	font-weight: 600;
+	text-transform: none;
+}
+
+.cmnstr-history-table td {
+	vertical-align: top;
+	overflow-wrap: anywhere;
+}
+
+.cmnstr-history-changes {
+	margin: 0;
+	padding-inline-start: 1.25rem;
+}

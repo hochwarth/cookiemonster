@@ -1,361 +1,275 @@
+const dialogElement = document.querySelector("#cmnstr-dialog");
+
+const SETTINGS_PARAM = "cmnstr-settings";
+const STATIC_ATTR = "data-static";
+const STATIC_ENTER = 0.45;
+const STATIC_LEAVE = 0.35;
+
 /**
- * Setzt einen Cookie-String auf `document.cookie`.
- * @param {string} cookie - Der zu setzende Cookie-String.
- * @returns {void}
+ * @param {HTMLElement | null} submitter
+ * @returns {boolean}
  */
-function setDocumentCookie(cookie) {
-	document.cookie = cookie;
+function isDialogSubmitter(submitter) {
+	return (
+		(submitter instanceof HTMLButtonElement || submitter instanceof HTMLInputElement) &&
+		submitter.formMethod === "dialog"
+	);
 }
 
 /**
- * Polyfill für die native Cookie Store API.
+ * @param {HTMLDialogElement} dialog
+ * @param {HTMLInputElement} checkbox
+ * @returns {HTMLInputElement[]}
  */
-const cmnstr = {
-	/**
-	 * Ruft einen Cookie nach Namen oder Optionen ab.
-	 * @param {string | { name?: string }} [options] - Der Name des Cookies oder ein Optionen-Objekt.
-	 * @returns {Promise<{ name: string, value: string } | null>} Ein Promise, das ein Cookie-Objekt oder `null` zurückgibt.
-	 */
-	async get(options) {
-		const name = typeof options === "string" ? options : options?.name;
-		if (!name) return null;
-
-		const value = document.cookie
-			.split("; ")
-			.find((row) => row.startsWith(`${name}=`))
-			?.split("=")
-			.at(1);
-
-		return value ? { name, value: decodeURIComponent(value) } : null;
-	},
-
-	/**
-	 * Setzt einen Cookie nach Namen und Wert oder einem Optionen-Objekt.
-	 * @param {string | { name: string, value: string, expires?: number | null, sameSite?: string, path?: string, domain?: string | null }} nameOrOptions - Der Name des Cookies oder ein Optionen-Objekt.
-	 * @param {string} [value] - Der Wert des Cookies (nur wenn `nameOrOptions` ein String ist).
-	 * @returns {Promise<void>}
-	 */
-	async set(nameOrOptions, value) {
-		const options =
-			typeof nameOrOptions === "string"
-				? {
-						name: nameOrOptions,
-						value: value ?? "",
-						expires: undefined,
-						sameSite: "lax",
-						path: "/",
-					}
-				: nameOrOptions;
-
-		const { name, value: cookieValue, expires, sameSite = "lax", path = "/", domain } = options;
-
-		let cookie = `${name}=${encodeURIComponent(cookieValue)}`;
-
-		if (expires) {
-			cookie += `; expires=${new Date(expires).toUTCString()}`;
-		}
-
-		cookie += `; path=${path}`;
-		cookie += `; SameSite=${sameSite}`;
-
-		if (domain) {
-			cookie += `; domain=${domain}`;
-		}
-
-		if (location.protocol === "https:") {
-			cookie += "; Secure";
-		}
-
-		setDocumentCookie(cookie);
-	},
-
-	/**
-	 * Löscht einen Cookie nach Namen oder Optionen.
-	 * @param {string | { name?: string }} [options] - Der Name des Cookies oder ein Optionen-Objekt.
-	 * @returns {Promise<void>}
-	 */
-	async delete(options) {
-		const name = typeof options === "string" ? options : options?.name;
-		if (!name) return;
-
-		setDocumentCookie(`${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=Lax`);
-	},
-};
-
-const dialog = /** @type {HTMLDialogElement} */ (document.getElementById("cmnstr-dialog"));
-if (!dialog) throw new Error("Cookie-Banner fehlt.");
+function getServiceCheckboxes(dialog, checkbox) {
+	return [
+		...dialog.querySelectorAll(`.cmnstr-group-checkbox[data-parent-category="${checkbox.id}"]`),
+	].filter((service) => service instanceof HTMLInputElement);
+}
 
 /**
- * Aktualisiert den Status einer einzelnen Kategorie-Checkbox.
- * Prüft alle Kinder und setzt die Checkbox auf checked/indeterminate.
- * @param {string | null} categoryKey - Der Key der Kategorie.
+ * @param {HTMLDialogElement} dialog
+ * @param {HTMLInputElement} checkbox
  * @returns {void}
  */
-function updateCheckboxState(categoryKey) {
-	if (!categoryKey) return;
+function updateCategoryCheckbox(dialog, checkbox) {
+	const services = getServiceCheckboxes(dialog, checkbox);
 
-	const checkbox = /** @type {HTMLInputElement | null} */ (
-		document.querySelector(`.cmnstr-category-checkbox[name="${categoryKey}"]`)
-	);
+	if (services.length === 0) {
+		return;
+	}
 
-	/** @type {NodeListOf<HTMLInputElement>} */
-	const children = document.querySelectorAll(
-		`.cmnstr-group-checkbox[data-parent-category="${categoryKey}"]`,
-	);
+	const checkedCount = services.filter((service) => service.checked).length;
 
-	if (!checkbox || children.length === 0) return;
+	checkbox.checked = checkedCount === services.length;
+	checkbox.indeterminate = checkedCount > 0 && checkedCount < services.length;
+}
 
-	const checkedCount = Array.from(children).filter((child) => child.checked).length;
+/**
+ * @param {HTMLDialogElement} dialog
+ * @returns {void}
+ */
+function initCategoryCheckboxes(dialog) {
+	const categoryCheckboxes = dialog.querySelectorAll(".cmnstr-category-checkbox");
 
-	if (checkedCount === 0) {
-		checkbox.checked = false;
-		checkbox.indeterminate = false;
-	} else if (checkedCount === children.length) {
-		checkbox.checked = true;
-		checkbox.indeterminate = false;
-	} else {
-		checkbox.checked = false;
-		checkbox.indeterminate = true;
+	for (const checkbox of categoryCheckboxes) {
+		if (!(checkbox instanceof HTMLInputElement)) {
+			continue;
+		}
+
+		const services = getServiceCheckboxes(dialog, checkbox);
+
+		if (services.length === 0) {
+			continue;
+		}
+
+		checkbox.hidden = false;
+		updateCategoryCheckbox(dialog, checkbox);
+
+		checkbox.addEventListener("change", () => {
+			for (const service of services) {
+				if (!service.disabled) {
+					service.checked = checkbox.checked;
+				}
+			}
+		});
+
+		for (const service of services) {
+			service.addEventListener("change", () => updateCategoryCheckbox(dialog, checkbox));
+		}
 	}
 }
 
 /**
- * Aktualisiert den Status aller Kategorie-Checkboxen auf der Seite.
+ * @param {HTMLDialogElement} dialog
  * @returns {void}
  */
-function refreshAllCheckboxStates() {
-	const categoryCheckboxes = document.querySelectorAll(".cmnstr-category-checkbox");
-	for (const checkbox of categoryCheckboxes) {
-		updateCheckboxState(checkbox.getAttribute("name"));
+function showCookieBanner(dialog) {
+	if (dialog.open && !dialog.matches(":modal")) {
+		dialog.close();
+	}
+
+	if (!dialog.open) {
+		dialog.showModal();
 	}
 }
 
 /**
- * Initialisiert die Event-Listener für die Checkbox-Logik.
+ * @param {HTMLDialogElement} dialog
  * @returns {void}
  */
-function initCheckboxLogic() {
-	const categoryCheckboxes = /** @type {HTMLInputElement[]} */ ([
-		...dialog.querySelectorAll(".cmnstr-category-checkbox"),
-	]);
+function removeSettingsParam(dialog) {
+	const url = new URL(window.location.href);
+	if (!url.searchParams.has(SETTINGS_PARAM)) {
+		return;
+	}
 
-	for (const checkbox of categoryCheckboxes) {
-		const categoryKey = checkbox.name;
+	url.searchParams.delete(SETTINGS_PARAM);
+	if (url.hash === `#${dialog.id}`) {
+		url.hash = "";
+	}
 
-		/** @type {NodeListOf<HTMLInputElement>} */
-		const children = document.querySelectorAll(
-			`.cmnstr-group-checkbox[data-parent-category="${categoryKey}"]:not(:disabled)`,
+	window.history.replaceState(window.history.state, "", url);
+}
+
+/** @returns {void} */
+function trackAlertHeight() {
+	const alert = document.querySelector("#cmnstr-alert");
+	if (!alert) {
+		return;
+	}
+
+	const content = alert.querySelector(".cmnstr-content");
+	const root = document.documentElement;
+	const update = () => {
+		const rect = alert.getBoundingClientRect();
+
+		if (rect.height === 0) {
+			root.style.removeProperty("--cmnstr-scroll-padding");
+
+			return;
+		}
+
+		const hiddenText = content ? content.scrollHeight - content.clientHeight : 0;
+		const limit = alert.hasAttribute(STATIC_ATTR) ? STATIC_LEAVE : STATIC_ENTER;
+		const isPortrait = window.matchMedia("(orientation: portrait)").matches;
+
+		alert.toggleAttribute(
+			STATIC_ATTR,
+			!isPortrait && alert.scrollHeight + hiddenText > window.innerHeight * limit,
 		);
 
-		// Master-Checkbox ändert alle Kinder
-		checkbox.addEventListener("change", () => {
-			for (const child of children) {
-				child.checked = checkbox.checked;
-			}
-		});
-	}
+		if (alert.hasAttribute(STATIC_ATTR)) {
+			root.style.removeProperty("--cmnstr-scroll-padding");
 
-	// Kind-Checkbox aktualisiert Master
-	const groupCheckboxes = dialog.querySelectorAll(".cmnstr-group-checkbox");
-	for (const child of groupCheckboxes) {
-		child.addEventListener("change", () => {
-			updateCheckboxState(child.getAttribute("data-parent-category"));
-		});
-	}
-}
-
-/**
- * Erstellt eine hierarchische Struktur aus flachen Cookie-Optionen.
- * @param {Record<string, boolean>} flatOptions - Flache Cookie-Optionen (z.B. "external-youtube": true).
- * @returns {Record<string, boolean | Record<string, any>>} Hierarchische Struktur.
- */
-function buildHierarchicalStructure(flatOptions) {
-	/** @type {Record<string, boolean | Record<string, any>>} */
-	const result = {};
-
-	/** @type {Map<string, Map<string, boolean>>} */
-	const groups = new Map();
-
-	// Gruppiere nach Hierarchie
-	for (const [key, value] of Object.entries(flatOptions)) {
-		const dashIndex = key.indexOf("-");
-
-		if (dashIndex === -1) {
-			// Top-Level (z.B. "essential")
-			result[key] = value;
-		} else {
-			// Verschachtelt (z.B. "external-youtube")
-			const groupName = key.slice(0, dashIndex);
-			const subKey = key.slice(dashIndex + 1);
-
-			if (!groups.has(groupName)) {
-				groups.set(groupName, new Map());
-			}
-			groups.get(groupName)?.set(subKey, value);
-		}
-	}
-
-	// Verarbeite Gruppen
-	for (const [groupName, subOptions] of groups) {
-		// false-Einträge entfernen
-		const clean = Object.fromEntries([...subOptions].filter(([_key, value]) => value));
-
-		// Das heißt, alle verbleibenden Werte sind true
-		const allTrue = Object.values(clean).every((v) => v === true);
-
-		if (allTrue && Object.keys(clean).length === subOptions.size) {
-			result[groupName] = true;
-		} else {
-			// rekursiv oder leeres Objekt, falls keine Kinder übrig
-			result[groupName] =
-				Object.keys(clean).length === 0 ? false : buildHierarchicalStructure(clean);
-		}
-	}
-
-	return result;
-}
-
-/**
- * Macht eine hierarchische Struktur wieder flach für Checkbox-Verarbeitung.
- * @param {Record<string, boolean | Record<string, any>>} preferences - Hierarchische Präferenzen.
- * @param {string} [prefix] - Aktuelles Präfix für rekursive Verarbeitung.
- * @returns {Record<string, boolean>} Flache Struktur.
- */
-function flattenPreferences(preferences, prefix = "") {
-	/** @type {Record<string, boolean>} */
-	const result = {};
-
-	for (const [key, value] of Object.entries(preferences)) {
-		const fullKey = prefix ? `${prefix}-${key}` : key;
-
-		if (typeof value === "boolean") {
-			result[fullKey] = value;
-		} else if (typeof value === "object" && value !== null) {
-			Object.assign(result, flattenPreferences(value, fullKey));
-		}
-	}
-
-	return result;
-}
-
-/**
- * Lädt gespeicherte Cookie-Präferenzen und setzt die Checkboxen entsprechend.
- * @returns {Promise<void>}
- */
-async function loadCookiePreferences() {
-	const cookie = await cmnstr.get("cmnstr");
-	if (!cookie) return;
-
-	try {
-		const preferences = JSON.parse(cookie.value);
-		const flatPreferences = flattenPreferences(preferences);
-
-		// Setze Checkbox-Werte
-		for (const [key, value] of Object.entries(flatPreferences)) {
-			const checkbox = /** @type {HTMLInputElement | null} */ (
-				document.querySelector(`.cmnstr-checkbox[name="cmnstr-${key}"]`)
-			);
-			if (checkbox && !checkbox.disabled) {
-				checkbox.checked = value;
-			}
+			return;
 		}
 
-		refreshAllCheckboxStates();
-	} catch (error) {
-		console.error("Fehler beim Laden der Cookie-Präferenzen:", error);
-	}
+		root.style.setProperty(
+			"--cmnstr-scroll-padding",
+			`${Math.ceil(rect.height + Math.max(0, window.innerHeight - rect.bottom))}px`,
+		);
+	};
+
+	new ResizeObserver(update).observe(alert);
+	window.addEventListener("resize", update);
 }
 
 /**
- * Setzt die Cookie-Zustimmung und speichert sie hierarchisch.
- * @param {boolean} [setAll] - `true` für alle akzeptieren, `false` für alle ablehnen, `undefined` für aktuelle Auswahl.
- * @returns {Promise<void>}
- */
-async function setCookieMonster(setAll) {
-	/** @type {Record<string, boolean>} */
-	const flatOptions = {};
-
-	/** @type {NodeListOf<HTMLInputElement>} */
-	const cookieOptions = document.querySelectorAll(".cmnstr-checkbox:not(:disabled)");
-
-	for (const option of cookieOptions) {
-		const key = option.name.replace("cmnstr-", "");
-		flatOptions[key] = setAll ?? option.checked;
-	}
-
-	flatOptions.essential = true;
-
-	// Erstelle hierarchische Struktur
-	const hierarchicalOptions = buildHierarchicalStructure(flatOptions);
-
-	// Lösche Analytics-Cookies wenn statistics nicht akzeptiert
-	const statisticsValue = hierarchicalOptions.statistics;
-	if (!statisticsValue) {
-		await Promise.all([cmnstr.delete("_gat"), cmnstr.delete("_ga"), cmnstr.delete("_gid")]);
-	}
-
-	// Speichere Cookie
-	const maxExpires = 180 * 24 * 60 * 60 * 1000;
-	const expiresDate = Date.now() + maxExpires;
-
-	// Wird vom CookieMonster Modul gesetzt
-	const cookieVersion = /** @type {*} */ (window).CMNSTR_COOKIE_VERSION ?? -1;
-	const value = { ...hierarchicalOptions, _version: cookieVersion };
-
-	await cmnstr.set({
-		name: "cmnstr",
-		value: JSON.stringify(value),
-		expires: expiresDate,
-		sameSite: "lax",
-	});
-
-	location.reload();
-}
-
-/**
- * Initialisiert CookieMonster, sobald DOM bereit ist.
- * @returns {Promise<void>}
- */
-async function initCookieMonster() {
-	initCheckboxLogic();
-	await loadCookiePreferences();
-
-	// Event-Delegation für alle Cookie-Buttons
-	document.addEventListener("click", (event) => {
-		if (!event.target) return;
-
-		const button = /** @type {Element} */ (event.target).closest("[data-cmnstr-action]");
-		if (!button) return;
-
-		const action = button.getAttribute("data-cmnstr-action");
-
-		switch (action) {
-			case "decline":
-				setCookieMonster(false);
-				break;
-			case "accept":
-				setCookieMonster(true);
-				break;
-			case "edit":
-				dialog.showModal();
-				refreshAllCheckboxStates();
-				break;
-			default:
-				setCookieMonster();
-		}
-	});
-}
-
-document.addEventListener("DOMContentLoaded", initCookieMonster, {
-	once: true,
-});
-
-/**
- * Öffnet den Cookie-Banner programmatisch.
+ * @param {HTMLDialogElement} dialog
  * @returns {void}
  */
-// @ts-expect-error Extending Window Object
-window.showCookieBanner = () => {
-	dialog.showModal();
-	refreshAllCheckboxStates();
-};
+function trackHeaderHeight(dialog) {
+	const header = dialog.querySelector(".cmnstr-header");
+
+	if (!(header instanceof HTMLElement)) {
+		return;
+	}
+
+	new ResizeObserver(() => {
+		dialog.style.setProperty("--cmnstr-header-height", `${header.offsetHeight}px`);
+	}).observe(header);
+}
+
+const statusRegion = document.querySelector("#cmnstr-status");
+if (statusRegion instanceof HTMLElement && statusRegion.dataset.message) {
+	const message = statusRegion.dataset.message;
+
+	setTimeout(() => {
+		statusRegion.textContent = message;
+	}, 250);
+}
+
+if (dialogElement instanceof HTMLDialogElement) {
+	initCategoryCheckboxes(dialogElement);
+
+	if (dialogElement.open) {
+		showCookieBanner(dialogElement);
+	}
+
+	removeSettingsParam(dialogElement);
+
+	trackAlertHeight();
+
+	trackHeaderHeight(dialogElement);
+
+	/** @type {HTMLElement | null} */
+	let opener = null;
+
+	/** @type {string | null} */
+	let maskId = null;
+
+	document.addEventListener("click", (event) => {
+		if (!(event.target instanceof Element)) {
+			return;
+		}
+
+		const trigger = event.target.closest(".cmnstr-button-edit");
+
+		if (trigger instanceof HTMLElement) {
+			event.preventDefault();
+			opener = trigger;
+			maskId =
+				trigger.closest(".cmnstr-content-mask")?.getAttribute("aria-labelledby") ?? null;
+			showCookieBanner(dialogElement);
+		}
+	});
+
+	// Safari does not focus links on mouse click, so the browser has nothing to restore
+	dialogElement.addEventListener("close", () => {
+		if (opener?.isConnected) {
+			opener.focus();
+		}
+
+		opener = null;
+		maskId = null;
+	});
+
+	// Return focus to the mask that opened the dialogElement after saving
+	dialogElement.addEventListener("submit", (event) => {
+		const redirect = dialogElement.querySelector('input[name="cmnstr-redirect"]');
+
+		if (maskId && redirect instanceof HTMLInputElement && !isDialogSubmitter(event.submitter)) {
+			redirect.value = `${redirect.value.split("#")[0]}#${maskId}`;
+		}
+	});
+
+	Object.assign(window, { showCookieBanner: () => showCookieBanner(dialogElement) });
+}
+
+const CONSENT_SUBMIT_KEY = "cmnstr-consent-submitted";
+const CONSENT_PATH = "/_cmnstr/consent";
+const loadedAt = Date.now();
+
+document.addEventListener("submit", (event) => {
+	const form = event.target;
+
+	if (
+		!(form instanceof HTMLFormElement) ||
+		isDialogSubmitter(event.submitter) ||
+		!new URL(form.action, location.href).pathname.endsWith(CONSENT_PATH)
+	) {
+		return;
+	}
+
+	try {
+		sessionStorage.setItem(CONSENT_SUBMIT_KEY, String(Date.now()));
+	} catch {
+		// Storage blocked: bfcache page stays as is
+	}
+});
+
+// A page restored from bfcache after a consent change would show the old mask/banner state
+window.addEventListener("pageshow", (event) => {
+	if (!event.persisted) {
+		return;
+	}
+
+	try {
+		if (Number(sessionStorage.getItem(CONSENT_SUBMIT_KEY)) > loadedAt) {
+			location.reload();
+		}
+	} catch {
+		// Storage blocked
+	}
+});

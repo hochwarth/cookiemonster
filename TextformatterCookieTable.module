@@ -6,31 +6,44 @@ namespace ProcessWire;
 
 class TextformatterCookieTable extends Textformatter implements Module
 {
-    public static function getModuleInfo()
+    /**
+     * @return array<string, mixed>
+     */
+    public static function getModuleInfo(): array
     {
-        return array(
+        return [
             'title' => 'CookieMonster Textformatter',
             'version' => 104,
             'summary' => 'Uses a shortcode to render a table with your configured cookies',
-            'author' => 'Johannes Dachsel'
-        );
+            'author' => 'Johannes Dachsel',
+            'requires' => [
+                'CookieMonster',
+                'PHP>=8.2',
+                'ProcessWire>=3.0.229',
+            ],
+        ];
     }
 
+    /**
+     * @param string $str
+     */
     public function formatValue(Page $page, Field $field, &$str): void
     {
-        /** @var CookieMonster|null $cmnstr */
         $cmnstr = $this->modules->get('CookieMonster');
 
-        $needle = '[[cookie-table]]';
-        if (strpos($str, $needle) !== false) {
-            $output = $cmnstr->renderCookieTable();
-            $str = str_replace($needle, $output, $str);
+        if (!$cmnstr instanceof CookieMonster || !\is_string($str)) {
+            return;
         }
 
-        $needle = '[[cookie-list]]';
-        if (strpos($str, $needle) !== false) {
-            $output = $cmnstr->renderCookieList();
-            $str = str_replace($needle, $output, $str);
+        $shortcodes = [
+            '[[cookie-table]]' => 'renderCookieTable',
+            '[[cookie-list]]' => 'renderCookieList',
+        ];
+
+        foreach ($shortcodes as $shortcode => $method) {
+            if (\str_contains($str, $shortcode)) {
+                $str = \str_replace($shortcode, $cmnstr->$method(), $str);
+            }
         }
     }
 }

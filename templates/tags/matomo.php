@@ -5,23 +5,30 @@ declare(strict_types=1);
 namespace ProcessWire;
 
 /**
- * @var string $matomoUrl - https://matomo.example.com/
+ * @var string $matomoUrl
  * @var string $documentTitle
- * @var string $siteId - 1
- * @var bool $shareTracking - false
- * @var bool $useCookies - true
- * @var string $shareDomain - https://*.example.com/
+ * @var string $siteId
+ * @var bool $shareTracking
+ * @var bool $useCookies
+ * @var string $shareDomain
  * @var string $cspNonce
  * @var bool $noScript
+ * @var Sanitizer $sanitizer
  */
+$matomoUrl = \rtrim($sanitizer->httpUrl($matomoUrl), '/') . '/';
+$siteId = $sanitizer->digits($siteId) ?: '1';
+$shareDomain = $sanitizer->nameFilter($shareDomain, ['.', '-', '*'], '');
 
 ?>
 
 <!-- Matomo -->
 <?php if (!$noScript): ?>
-	<script nonce="<?= $cspNonce; ?>" async>
+	<script
+		nonce="<?= $cspNonce; ?>"
+		data-matomo-url="<?= $sanitizer->entities($matomoUrl); ?>"
+		data-document-title="<?= $sanitizer->entities($documentTitle); ?>">
 		var _paq = window._paq = window._paq || [];
-		_paq.push(["setDocumentTitle", <?= $documentTitle ? "'{$documentTitle}'" : 'document.title'; ?>]);
+		_paq.push(["setDocumentTitle", document.currentScript.dataset.documentTitle || document.title]);
 		<?php if (!$useCookies): ?>
 			_paq.push(["disableCookies"]);
 			_paq.push(["disableBrowserFeatureDetection"]);
@@ -32,26 +39,24 @@ namespace ProcessWire;
 		_paq.push(['setVisitorCookieTimeout', 15778800]); // 6 Monate in Sekunden
 		_paq.push(["trackPageView"]);
 		_paq.push(["enableLinkTracking"]);
-		(() => {
-			const u = "<?= rtrim($matomoUrl, '/') . '/'; ?>";
+		((script) => {
+			const u = script.dataset.matomoUrl;
 			_paq.push(["setTrackerUrl", `${u}matomo.php`]);
 			_paq.push(["setSiteId", "<?= $siteId; ?>"]);
 			const g = document.createElement("script");
-			const s = document.currentScript;
 			g.async = true;
 			g.src = `${u}matomo.js`;
-			s?.replaceWith(g);
-		})();
+			script.replaceWith(g);
+		})(document.currentScript);
 	</script>
 <?php elseif ($useCookies): ?>
 	<noscript>
 		<img
-			src="<?= $matomoUrl; ?>/matomo.php?idsite=<?= $siteId; ?>&amp;rec=1"
+			src="<?= $sanitizer->entities($matomoUrl); ?>matomo.php?idsite=<?= $siteId; ?>&amp;rec=1"
 			referrerpolicy="no-referrer-when-downgrade"
-			class="sr-only"
-			loading="lazy"
-			decoding="async"
-			fetchpriority="low"
-			alt="Tracking" />
+			width="1"
+			height="1"
+			class="cmnstr-sr-only"
+			alt="">
 	</noscript>
 <?php endif; ?>

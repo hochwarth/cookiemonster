@@ -8,14 +8,16 @@ namespace ProcessWire;
  * @var string $insightId
  * @var string $cspNonce
  * @var bool $noScript
+ * @var Sanitizer $sanitizer
  */
+$insightId = $sanitizer->digits($insightId);
 
 ?>
 
 <!-- LinkedIn Insight -->
 <?php if (!$noScript): ?>
 	<script nonce="<?= $cspNonce; ?>" async>
-		_linkedin_partner_id = <?= $insightId; ?>;
+		_linkedin_partner_id = "<?= $insightId; ?>";
 		window._linkedin_data_partner_ids = window._linkedin_data_partner_ids || [];
 		window._linkedin_data_partner_ids.push(_linkedin_partner_id);
 	</script>
@@ -28,7 +30,7 @@ namespace ProcessWire;
 	</script>
 <?php else: ?>
 	<noscript>
-		<img height="1" width="1" style="display:none"
-			src="https://px.ads.linkedin.com/collect/?pid=<?= $insightId; ?>&fmt=gif" />
+		<img height="1" width="1" class="cmnstr-sr-only" alt=""
+			src="https://px.ads.linkedin.com/collect/?pid=<?= $insightId; ?>&amp;fmt=gif">
 	</noscript>
 <?php endif; ?>

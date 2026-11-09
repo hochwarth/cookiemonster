@@ -6,7 +6,7 @@ namespace ProcessWire;
 
 $info = [
     'title' => 'CookieMonster',
-    'version' => '4.5.0',
+    'version' => '4.6.0',
     'summary' => 'Cookie banner with integrated security headers, tracking, and consent management.',
     'href' => 'https://github.com/hochwarth/cookiemonster',
     'singular' => true,
@@ -14,7 +14,14 @@ $info = [
     'icon' => 'github-alt',
     'author' => 'Hochwarth IT',
     'requires' => [
-        'PHP>=7.4',
-        'ProcessWire>=3.0'
+        'PHP>=8.2',
+        'ProcessWire>=3.0.229',
+        'LazyCron',
+    ],
+    'installs' => [
+        'LazyCron',
+        'FieldtypeCookieService',
+        'InputfieldCookieService',
+        'TextformatterCookieTable',
     ],
 ];

@@ -6,8 +6,9 @@ namespace ProcessWire;
 
 /**
  * @var CookieMonster $cmnstr
- * @var array $headers Assoziatives Array der Header ['key' => 'Label']
- * @var array $cookies Das Array mit den gruppierten Cookies (Kategorien -> Gruppen)
+ * @var array $headers
+ * @var array $cookies
+ * @var bool $interactive
  * @var Sanitizer $sanitizer
  */
 
@@ -29,31 +30,36 @@ namespace ProcessWire;
 						<li class='cmnstr-group'>
 							<div class="cmnstr-grid">
 								<div class="cmnstr-group-info">
-									<p class="cmnstr-group-title"><strong><?= $sanitizer->entities($group['title'] ?: $category['title']); ?></strong></p>
+									<p<?= $interactive ? " id=\"cmnstr-{$groupId}-title\"" : ''; ?> class="cmnstr-group-title"><strong><?= $sanitizer->entities($group['title'] ?: $category['title']); ?></strong></p>
 
-									<?php if (!empty($group['description'])): ?>
-										<p class='cmnstr-group-description'><?= $sanitizer->entities($group['description']); ?></p>
-									<?php endif; ?>
+										<?php if (!empty($group['description'])): ?>
+											<p<?= $interactive ? " id=\"cmnstr-{$groupId}-description\"" : ''; ?> class='cmnstr-group-description'><?= $sanitizer->entities($group['description']); ?></p>
+											<?php endif; ?>
 								</div>
 
-								<label class="cmnstr-field" for="cmnstr-<?= $groupId; ?>">
-									<span class="cmnstr-label"><?= __('Aktiv'); ?></span>
-									<input
-										type="checkbox"
-										id="cmnstr-<?= $groupId; ?>"
-										name="cmnstr-<?= $groupId; ?>"
-										class="cmnstr-checkbox cmnstr-group-checkbox"
-										data-parent-category="cmnstr-<?= $category['key']; ?>"
-										<?php if ($isChecked || $isEssential): ?>checked<?php endif; ?>
-										<?php if ($isEssential): ?>disabled<?php endif; ?>
-										aria-label="<?= $group['title'] ?>">
-								</label>
+								<?php if ($interactive): ?>
+									<label class="cmnstr-field" for="cmnstr-<?= $groupId; ?>">
+										<span id="cmnstr-<?= $groupId; ?>-label" class="cmnstr-label"><?= $cmnstr->text('active'); ?></span>
+										<input
+											type="checkbox"
+											id="cmnstr-<?= $groupId; ?>"
+											name="cmnstr-<?= $groupId; ?>"
+											class="cmnstr-checkbox cmnstr-group-checkbox"
+											data-parent-category="cmnstr-<?= $category['key']; ?>"
+											<?php if ($isChecked || $isEssential): ?>checked<?php endif; ?>
+											<?php if ($isEssential): ?>disabled<?php endif; ?>
+											aria-labelledby="cmnstr-<?= $groupId; ?>-title cmnstr-<?= $groupId; ?>-label"
+											<?php if (!empty($group['description'])): ?>aria-describedby="cmnstr-<?= $groupId; ?>-description" <?php endif; ?>>
+									</label>
+								<?php endif; ?>
 							</div>
 
-							<?php if (count($group['cookies']) > 0): ?>
+							<?php if (\count($group['cookies']) > 0): ?>
 								<details class='cmnstr-group-details'>
-									<summary class='cmnstr-group-summary'>
-										<?= __('Cookie-Informationen anzeigen'); ?>
+									<summary
+										class='cmnstr-group-summary'
+										aria-label="<?= $sanitizer->entities(\sprintf($cmnstr->text('list_show_for'), $group['title'] ?: $category['title'])); ?>">
+										<?= $cmnstr->text('list_show'); ?>
 									</summary>
 
 									<div class="cmnstr-group-content">
@@ -79,3 +85,7 @@ namespace ProcessWire;
 		</li>
 	<?php endforeach; ?>
 </ul>
+
+<?php if (!$interactive): ?>
+	<?= $cmnstr->renderConsentIdPlaceholder(); ?>
+<?php endif; ?>
