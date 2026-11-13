@@ -699,7 +699,7 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 			$changed = false;
 
 			foreach ($matrixField->getArray() as $key => $ids) {
-				if (!\preg_match('/^matrix\d+_fields$/', (string) $key) || !\is_array($ids)) {
+				if (!\preg_match('/^(matrix\d+_fields|repeaterFields)$/', (string) $key) || !\is_array($ids)) {
 					continue;
 				}
 
