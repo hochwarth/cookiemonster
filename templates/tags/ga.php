@@ -10,15 +10,15 @@ namespace ProcessWire;
  * @var bool $noScript
  * @var Sanitizer $sanitizer
  */
-$propertyId = $sanitizer->name($propertyId);
+$id = $sanitizer->name($propertyId);
 
 ?>
 
 <?php if (!$noScript): ?>
 	<!-- Global Site Tag (gtag.js) - Google Analytics -->
-	<script nonce="<?= $cspNonce; ?>" async src="https://www.googletagmanager.com/gtag/js?id=<?= $propertyId; ?>"></script>
+	<script nonce="<?= $cspNonce; ?>" async src="https://www.googletagmanager.com/gtag/js?id=<?= $id; ?>"></script>
 	<script nonce="<?= $cspNonce; ?>">
 		gtag('js', new Date());
-		gtag('config', '<?= $propertyId; ?>');
+		gtag('config', '<?= $id; ?>');
 	</script>
 <?php endif; ?>

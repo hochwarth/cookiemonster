@@ -5,10 +5,11 @@ declare(strict_types=1);
 namespace ProcessWire;
 
 /**
+ * @var string $html
  * @var string $category
  * @var bool $matchAny
  * @var string $maskId
- * @var string $serviceNames HTML-escaped names of the blocked services
+ * @var string $serviceNames
  * @var string $prompt
  * @var string $info
  * @var string $buttonEdit
@@ -95,4 +96,7 @@ namespace ProcessWire;
 		</p>
 	<?php endif; ?>
 
+	<?php if ($html !== ''): ?>
+		<template class="cmnstr-mask-template"><?= $html; ?></template>
+	<?php endif; ?>
 </form>

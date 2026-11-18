@@ -92,7 +92,6 @@
 		border-radius: var(--cmnstr-border-radius);
 		padding: 0;
 		color: var(--cmnstr-text);
-		font-family: inherit;
 		font-size: var(--cmnstr-font-size-base);
 		color-scheme: light;
 		box-shadow:
@@ -123,20 +122,18 @@
 		flex-shrink: 0;
 	}
 
-	.cmnstr[open][data-static]:not(:modal) {
-		position: relative;
-		inset: auto;
-		margin: var(--cmnstr-space-xs) auto var(--cmnstr-space-lg);
-		max-block-size: none;
-	}
+	@media (height < 36rem) {
+		#cmnstr-alert[open]:not(:modal) {
+			position: relative;
+			inset: auto;
+			margin: var(--cmnstr-space-xs) auto var(--cmnstr-space-lg);
+			max-block-size: none;
+		}
 
-	.cmnstr[open][data-static]:not(:modal) .cmnstr-content {
-		min-block-size: auto;
-		overflow-y: visible;
-	}
-
-	html:has(#cmnstr-alert[open]:not(:modal, [data-static])) {
-		scroll-padding-block-end: calc(var(--cmnstr-scroll-padding) + var(--cmnstr-space-xs));
+		#cmnstr-alert[open]:not(:modal) .cmnstr-content {
+			min-block-size: auto;
+			overflow-y: visible;
+		}
 	}
 
 	.cmnstr[open]:modal {
@@ -158,7 +155,10 @@
 		}
 
 		.cmnstr[open]:modal {
-			scroll-padding-block-start: var(--cmnstr-header-height, 4.5rem);
+			/* Sticky header: block padding + one title line, as tall as the close button */
+			scroll-padding-block-start: calc(
+				var(--cmnstr-space-md) * 2 + var(--cmnstr-font-size-xl) * 1.25
+			);
 		}
 
 		.cmnstr[open]:modal .cmnstr-header {
@@ -219,6 +219,7 @@
 		margin: 0;
 		font-size: var(--cmnstr-font-size-xl);
 		font-weight: 600;
+		line-height: 1.25;
 	}
 
 	.cmnstr-close-button {
@@ -235,6 +236,7 @@
 		appearance: none;
 		border-style: none;
 		border-radius: var(--cmnstr-border-radius-sm);
+		font-family: inherit;
 		font-size: var(--cmnstr-font-size-xl);
 		line-height: 0;
 		font-weight: lighter;
@@ -573,6 +575,7 @@
 		padding-inline: var(--cmnstr-space-md);
 		border: 1px solid var(--cmnstr-primary-color);
 		border-radius: var(--cmnstr-border-radius-sm);
+		font-family: inherit;
 		font-size: var(--cmnstr-font-size-base);
 		font-weight: 500;
 		background-color: var(--cmnstr-primary-color);
@@ -606,7 +609,6 @@
 		padding: 0.25em;
 		background-color: var(--cmnstr-bg);
 		color: var(--cmnstr-primary-color);
-		font-family: inherit;
 		font-size: var(--cmnstr-font-size-xl);
 		font-weight: 500;
 		cursor: pointer;
@@ -672,7 +674,6 @@
 		border-radius: var(--cmnstr-border-radius-sm);
 		background-color: var(--cmnstr-bg);
 		color: var(--cmnstr-text);
-		font-family: inherit;
 		font-size: var(--cmnstr-font-size-base);
 	}
 
@@ -719,7 +720,6 @@
 		border-radius: var(--cmnstr-border-radius-sm);
 		background-color: var(--cmnstr-bg);
 		color: var(--cmnstr-text);
-		font-family: inherit;
 		line-height: 1.5;
 		text-align: start;
 	}
@@ -751,7 +751,6 @@
 
 	.cmnstr-content-mask .cmnstr-button {
 		min-block-size: 2.75rem;
-		font-family: inherit;
 	}
 
 	.cmnstr-content-mask strong {

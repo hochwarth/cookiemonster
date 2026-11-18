@@ -10,13 +10,13 @@ namespace ProcessWire;
  * @var bool $noScript
  * @var Sanitizer $sanitizer
  */
-$gtmId = $sanitizer->name($gtmId);
+$id = $sanitizer->name($gtmId);
 
 ?>
 
 <!-- Google Tag Manager -->
 <?php if (!$noScript): ?>
-	<script nonce="<?= $cspNonce; ?>" async>
+	<script nonce="<?= $cspNonce; ?>">
 		(function(w, d, s, l, i) {
 			w[l] = w[l] || [];
 			w[l].push({
@@ -29,9 +29,9 @@ $gtmId = $sanitizer->name($gtmId);
 			j.async = true;
 			j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
 			f.parentNode.insertBefore(j, f);
-		})(window, document, 'script', 'dataLayer', '<?= $gtmId; ?>');
+		})(window, document, 'script', 'dataLayer', '<?= $id; ?>');
 	</script>
 <?php else: ?>
-	<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=<?= $gtmId; ?>"
+	<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=<?= $id; ?>"
 	height="0" width="0" class="cmnstr-sr-only"></iframe></noscript>
 <?php endif; ?>

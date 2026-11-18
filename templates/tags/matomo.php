@@ -15,9 +15,9 @@ namespace ProcessWire;
  * @var bool $noScript
  * @var Sanitizer $sanitizer
  */
-$matomoUrl = \rtrim($sanitizer->httpUrl($matomoUrl), '/') . '/';
-$siteId = $sanitizer->digits($siteId) ?: '1';
-$shareDomain = $sanitizer->nameFilter($shareDomain, ['.', '-', '*'], '');
+$id = $sanitizer->digits($siteId) ?: '1';
+$domain = $sanitizer->nameFilter($shareDomain, ['.', '-', '*'], '');
+$url = \rtrim($sanitizer->httpUrl($matomoUrl), '/') . '/';
 
 ?>
 
@@ -25,7 +25,7 @@ $shareDomain = $sanitizer->nameFilter($shareDomain, ['.', '-', '*'], '');
 <?php if (!$noScript): ?>
 	<script
 		nonce="<?= $cspNonce; ?>"
-		data-matomo-url="<?= $sanitizer->entities($matomoUrl); ?>"
+		data-matomo-url="<?= $sanitizer->entities($url); ?>"
 		data-document-title="<?= $sanitizer->entities($documentTitle); ?>">
 		var _paq = window._paq = window._paq || [];
 		_paq.push(["setDocumentTitle", document.currentScript.dataset.documentTitle || document.title]);
@@ -34,7 +34,7 @@ $shareDomain = $sanitizer->nameFilter($shareDomain, ['.', '-', '*'], '');
 			_paq.push(["disableBrowserFeatureDetection"]);
 		<?php endif; ?>
 		<?php if ($shareTracking): ?>
-			_paq.push(["setCookieDomain", "<?= $shareDomain; ?>"]);
+			_paq.push(["setCookieDomain", "<?= $domain; ?>"]);
 		<?php endif; ?>
 		_paq.push(['setVisitorCookieTimeout', 15778800]); // 6 Monate in Sekunden
 		_paq.push(["trackPageView"]);
@@ -42,7 +42,7 @@ $shareDomain = $sanitizer->nameFilter($shareDomain, ['.', '-', '*'], '');
 		((script) => {
 			const u = script.dataset.matomoUrl;
 			_paq.push(["setTrackerUrl", `${u}matomo.php`]);
-			_paq.push(["setSiteId", "<?= $siteId; ?>"]);
+			_paq.push(["setSiteId", "<?= $id; ?>"]);
 			const g = document.createElement("script");
 			g.async = true;
 			g.src = `${u}matomo.js`;
@@ -52,7 +52,7 @@ $shareDomain = $sanitizer->nameFilter($shareDomain, ['.', '-', '*'], '');
 <?php elseif ($useCookies): ?>
 	<noscript>
 		<img
-			src="<?= $sanitizer->entities($matomoUrl); ?>matomo.php?idsite=<?= $siteId; ?>&amp;rec=1"
+			src="<?= $sanitizer->entities($url); ?>matomo.php?idsite=<?= $id; ?>&amp;rec=1"
 			referrerpolicy="no-referrer-when-downgrade"
 			width="1"
 			height="1"

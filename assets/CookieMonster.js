@@ -1,9 +1,6 @@
 const dialogElement = document.querySelector("#cmnstr-dialog");
 
 const SETTINGS_PARAM = "cmnstr-settings";
-const STATIC_ATTR = "data-static";
-const STATIC_ENTER = 0.45;
-const STATIC_LEAVE = 0.35;
 
 /**
  * @param {HTMLElement | null} submitter
@@ -22,9 +19,12 @@ function isDialogSubmitter(submitter) {
  * @returns {HTMLInputElement[]}
  */
 function getServiceCheckboxes(dialog, checkbox) {
-	return [
-		...dialog.querySelectorAll(`.cmnstr-group-checkbox[data-parent-category="${checkbox.id}"]`),
-	].filter((service) => service instanceof HTMLInputElement);
+	/** @type {NodeListOf<HTMLInputElement>} */
+	const services = dialog.querySelectorAll(
+		`input.cmnstr-group-checkbox[data-parent-category="${checkbox.id}"]`,
+	);
+
+	return [...services];
 }
 
 /**
@@ -50,13 +50,10 @@ function updateCategoryCheckbox(dialog, checkbox) {
  * @returns {void}
  */
 function initCategoryCheckboxes(dialog) {
-	const categoryCheckboxes = dialog.querySelectorAll(".cmnstr-category-checkbox");
+	/** @type {NodeListOf<HTMLInputElement>} */
+	const categoryCheckboxes = dialog.querySelectorAll("input.cmnstr-category-checkbox");
 
 	for (const checkbox of categoryCheckboxes) {
-		if (!(checkbox instanceof HTMLInputElement)) {
-			continue;
-		}
-
 		const services = getServiceCheckboxes(dialog, checkbox);
 
 		if (services.length === 0) {
@@ -112,65 +109,6 @@ function removeSettingsParam(dialog) {
 	window.history.replaceState(window.history.state, "", url);
 }
 
-/** @returns {void} */
-function trackAlertHeight() {
-	const alert = document.querySelector("#cmnstr-alert");
-	if (!alert) {
-		return;
-	}
-
-	const content = alert.querySelector(".cmnstr-content");
-	const root = document.documentElement;
-	const update = () => {
-		const rect = alert.getBoundingClientRect();
-
-		if (rect.height === 0) {
-			root.style.removeProperty("--cmnstr-scroll-padding");
-
-			return;
-		}
-
-		const hiddenText = content ? content.scrollHeight - content.clientHeight : 0;
-		const limit = alert.hasAttribute(STATIC_ATTR) ? STATIC_LEAVE : STATIC_ENTER;
-		const isPortrait = window.matchMedia("(orientation: portrait)").matches;
-
-		alert.toggleAttribute(
-			STATIC_ATTR,
-			!isPortrait && alert.scrollHeight + hiddenText > window.innerHeight * limit,
-		);
-
-		if (alert.hasAttribute(STATIC_ATTR)) {
-			root.style.removeProperty("--cmnstr-scroll-padding");
-
-			return;
-		}
-
-		root.style.setProperty(
-			"--cmnstr-scroll-padding",
-			`${Math.ceil(rect.height + Math.max(0, window.innerHeight - rect.bottom))}px`,
-		);
-	};
-
-	new ResizeObserver(update).observe(alert);
-	window.addEventListener("resize", update);
-}
-
-/**
- * @param {HTMLDialogElement} dialog
- * @returns {void}
- */
-function trackHeaderHeight(dialog) {
-	const header = dialog.querySelector(".cmnstr-header");
-
-	if (!(header instanceof HTMLElement)) {
-		return;
-	}
-
-	new ResizeObserver(() => {
-		dialog.style.setProperty("--cmnstr-header-height", `${header.offsetHeight}px`);
-	}).observe(header);
-}
-
 const statusRegion = document.querySelector("#cmnstr-status");
 if (statusRegion instanceof HTMLElement && statusRegion.dataset.message) {
 	const message = statusRegion.dataset.message;
@@ -188,10 +126,6 @@ if (dialogElement instanceof HTMLDialogElement) {
 	}
 
 	removeSettingsParam(dialogElement);
-
-	trackAlertHeight();
-
-	trackHeaderHeight(dialogElement);
 
 	/** @type {HTMLElement | null} */
 	let opener = null;
@@ -225,7 +159,7 @@ if (dialogElement instanceof HTMLDialogElement) {
 		maskId = null;
 	});
 
-	// Return focus to the mask that opened the dialogElement after saving
+	// After saving, jump back to the mask that opened the dialog
 	dialogElement.addEventListener("submit", (event) => {
 		const redirect = dialogElement.querySelector('input[name="cmnstr-redirect"]');
 
@@ -252,10 +186,33 @@ document.addEventListener("submit", (event) => {
 		return;
 	}
 
+	if (document.referrer) {
+		/** @type {HTMLInputElement | null} */
+		let referrerInput = form.querySelector('input[name="cmnstr-referrer"]');
+		if (!referrerInput) {
+			referrerInput = document.createElement("input");
+			referrerInput.type = "hidden";
+			referrerInput.name = "cmnstr-referrer";
+			form.append(referrerInput);
+		}
+
+		referrerInput.value = document.referrer;
+	}
+
 	try {
 		sessionStorage.setItem(CONSENT_SUBMIT_KEY, String(Date.now()));
 	} catch {
-		// Storage blocked: bfcache page stays as is
+		// Storage blocked
+	}
+
+	// CookieMonster.live.js cancels this event and submits via fetch
+	const liveSubmit = new CustomEvent("cmnstr:submit", {
+		cancelable: true,
+		detail: { form, submitter: event.submitter },
+	});
+
+	if (!document.dispatchEvent(liveSubmit)) {
+		event.preventDefault();
 	}
 });
 

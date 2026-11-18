@@ -18,7 +18,7 @@ namespace ProcessWire;
  * @var string $buttonAccept
  * @var Page|NullPage $imprintPage
  * @var Page|NullPage $privacyPage
- * @var array $categories
+ * @var array<int, array<string, mixed>> $categories
  * @var string $signalNotice
  * @var string $consentUrl
  * @var string $redirectUrl
@@ -190,11 +190,9 @@ $renderLegalNav = static function () use ($cmnstr, $imprintPage, $privacyPage): 
 									</label>
 								</div>
 
-								<?php if ($category['cookies']): ?>
-									<div class="cmnstr-data-wrap">
-										<?= $cmnstr->renderCookieList($category, true) ?>
-									</div>
-								<?php endif; ?>
+								<div class="cmnstr-data-wrap">
+									<?= $cmnstr->renderCookieList($category, true) ?>
+								</div>
 							</div>
 						</details>
 					<?php endif; ?>
