@@ -27,20 +27,29 @@ Rolle: Betreiber und Redaktion. Diese Vorlagen ergänzen die [README](../README.
     - [Matomo](#vorlage-matomo)
     - [Google Analytics 4](#vorlage-google-analytics-4)
     - [Google Tag Manager (Statistik)](#vorlage-google-tag-manager-statistik)
+    - [Microsoft Clarity](#vorlage-microsoft-clarity)
 - [Marketing-Cookies](#marketing-cookies)
     - [Google Tag Manager (Marketing) / Google Ads](#vorlage-google-tag-manager-marketing-google-ads)
     - [Meta Pixel (Facebook/Instagram)](#vorlage-meta-pixel-facebook-instagram)
     - [LinkedIn Insight Tag](#vorlage-linkedin-insight-tag)
     - [TikTok Pixel](#vorlage-tiktok-pixel)
+    - [Microsoft Advertising UET (Bing, Copilot)](#vorlage-microsoft-advertising-uet-bing-copilot)
+    - [ChatGPT Ads Pixel (OpenAI)](#vorlage-chatgpt-ads-pixel-openai)
+    - [Snapchat Pixel](#vorlage-snapchat-pixel)
 - [Externe Inhalte](#externe-inhalte)
     - [YouTube](#vorlage-youtube)
     - [Vimeo](#vorlage-vimeo)
     - [Google Maps](#vorlage-google-maps)
     - [Google Fonts](#vorlage-google-fonts)
+    - [OpenStreetMap](#vorlage-openstreetmap)
+    - [Instagram](#vorlage-instagram)
+    - [Facebook](#vorlage-facebook)
+    - [X (Twitter)](#vorlage-x-twitter)
+    - [Calendly](#vorlage-calendly)
 - [Veraltete Einträge](#veraltete-einträge)
 - [Quellen](#quellen)
 
-_Stand: Oktober 2026. Die Einträge stammen aus den Cookie-Richtlinien der Anbieter (Quellen am Ende des Abschnitts), aus dem Code der Anbieter-Scripts und aus Stichproben im Browser; nicht offiziell dokumentierte Angaben sind in den Hinweisen gekennzeichnet. Anbieter ändern Namen und Laufzeiten regelmäßig: vor dem Livegang im Browser (DevTools → Anwendung → Cookies/Speicher) mit und ohne Zustimmung prüfen und nur übernehmen, was die Website tatsächlich einsetzt._
+_Stand: November 2026. Die Einträge stammen aus den Cookie-Richtlinien der Anbieter (Quellen am Ende des Abschnitts), aus dem Code der Anbieter-Scripts und aus Stichproben im Browser; nicht offiziell dokumentierte Angaben sind in den Hinweisen gekennzeichnet. Anbieter ändern Namen und Laufzeiten regelmäßig: vor dem Livegang im Browser (DevTools → Anwendung → Cookies/Speicher) mit und ohne Zustimmung prüfen und nur übernehmen, was die Website tatsächlich einsetzt._
 
 ## Konventionen in den Beispielen
 
@@ -158,7 +167,21 @@ Cloudflare Turnstile setzt `cf_clearance` nur mit „Pre-Clearance“ (standardm
 
 </details>
 
-Die Cookie-Zeilen hängen von den Tags im Container ab – hier ein Container mit GA4. Dass gtm.js selbst keine Cookies setzt, ist beobachtet; Google sagt es nicht ausdrücklich. Weitere Tags (z.B. Hotjar, Microsoft Clarity) mit ihren Cookies ergänzen.
+Die Cookie-Zeilen hängen von den Tags im Container ab – hier ein Container mit GA4. Dass gtm.js selbst keine Cookies setzt, ist beobachtet; Google sagt es nicht ausdrücklich. Weitere Tags (z.B. Microsoft Clarity) mit ihren Cookies ergänzen.
+
+<details id="vorlage-microsoft-clarity">
+	<summary>Microsoft Clarity</summary>
+
+    ---clarity|Microsoft Clarity|Microsoft Clarity zeichnet pseudonymisiert auf, wie Besucher diese Website nutzen (z.B. Klicks, Scrollen, Mausbewegungen), und stellt uns daraus Statistiken, Heatmaps und Sitzungsaufzeichnungen bereit. Bei Zustimmung findet ein Datenaustausch mit Microsoft statt.|Wir nutzen Microsoft Clarity, um die Bedienbarkeit unserer Website zu verbessern.
+    _clck|beispiel.de|Speichert eine zufällige Clarity-Nutzer-ID und Einstellungen, um wiederkehrende Besucher zu erkennen.|1 Jahr
+    _clsk|beispiel.de|Fasst die Seitenaufrufe eines Besuchs zu einer Sitzungsaufzeichnung zusammen.|1 Tag
+    CLID|clarity.ms|Erkennt den Browser beim ersten Kontakt mit Clarity websiteübergreifend.|1 Jahr
+    MUID|bing.com|Identifiziert den Browser websiteübergreifend auf Microsoft-Seiten (Werbung, Statistik).|1 Jahr
+
+</details>
+
+- Die Cookie-Namen und Zwecke stammen aus der Microsoft-Liste. Laufzeiten und Domains der Third-Party-Cookies nennt Microsoft nicht; die Werte stammen aus Cookie-Datenbanken (inoffiziell). Microsoft führt außerdem `ANONCHK`, `MR` und `SM` (Third-Party, Flags zur MUID-Synchronisierung) – bei Bedarf ergänzen.
+- Seit 31.10.2025 verlangt Clarity für Besuche aus EWR, UK und der Schweiz ein Consent-Signal. Ohne Signal setzt Clarity keine Cookies („no-consent mode“). Lädt Clarity erst nach Zustimmung (z.B. über den GTM-Container), danach `window.clarity('consentv2', { ad_Storage: "granted", analytics_Storage: "granted" })` aufrufen.
 
 ## Marketing-Cookies
 
@@ -232,6 +255,43 @@ Die Cookie-Zeilen hängen von den Tags im Container ab – hier ein Container mi
 
 Die Laufzeiten gelten laut TikTok jeweils 13 Monate ab letzter Nutzung. First-Party-Cookies lassen sich im TikTok Events Manager abschalten; schon gesetzte bleiben bis zum Ablauf erhalten.
 
+<details id="vorlage-microsoft-advertising-uet-bing-copilot">
+	<summary>Microsoft Advertising UET (Bing, Copilot)</summary>
+
+    ---microsoft_ads|Microsoft Advertising|Das UET-Tag von Microsoft Advertising misst die Wirksamkeit von Werbeanzeigen in Bing, Copilot und dem Microsoft-Werbenetzwerk anhand der Aktionen, die Besucher auf unserer Website ausführen, und ermöglicht Retargeting. Bei Zustimmung findet ein Datenaustausch mit Microsoft statt.|Wir nutzen das UET-Tag zur Erfolgsmessung unserer Microsoft-Werbeanzeigen.
+    _uetsid|beispiel.de|Ordnet Seitenaufrufe einer Sitzung zu, um Werbeanzeigen zu messen.|1 Tag
+    _uetvid|beispiel.de|Identifiziert den Browser über Sitzungen hinweg, um Aktionen auf dieser Website Werbeanzeigen zuzuordnen.|13 Monate
+    _uetmsclkid|beispiel.de|Speichert die Microsoft-Klick-ID aus der Anzeigen-URL, um einen Besuch der angeklickten Werbeanzeige zuzuordnen.|90 Tage
+    MUID|bing.com|Identifiziert den Browser websiteübergreifend für Microsoft-Werbeanzeigen.|13 Monate
+
+</details>
+
+Die Laufzeiten nennt Microsoft nicht in einer offiziellen Tabelle; sie stammen aus Cookie-Datenbanken und Stichproben. `_uetmsclkid` entsteht nur nach einem Anzeigenklick mit `msclkid`. Das Modul meldet dem Tag die Zustimmung per Microsoft Consent Mode (`ad_storage: granted`), weil es erst nach der Zustimmung lädt.
+
+<details id="vorlage-chatgpt-ads-pixel-openai">
+	<summary>ChatGPT Ads Pixel (OpenAI)</summary>
+
+    ---openai_ads|ChatGPT Ads|Das Measurement Pixel von OpenAI misst die Wirksamkeit von Werbeanzeigen in ChatGPT anhand der Aktionen, die Besucher auf unserer Website ausführen. Bei Zustimmung findet ein Datenaustausch mit OpenAI statt.|Wir nutzen das ChatGPT Ads Pixel zur Erfolgsmessung unserer Werbeanzeigen in ChatGPT.
+    __oppref|beispiel.de|Speichert die Kennung aus dem Anzeigenklick in ChatGPT (`oppref`), um einen Besuch der Werbeanzeige zuzuordnen.|30 Tage
+    __obref|beispiel.de|Identifiziert den Browser, um Aktionen auf dieser Website Werbeanzeigen in ChatGPT zuzuordnen.|1 Jahr
+
+</details>
+
+Laut OpenAI setzt das Pixel beide Cookies nur mit Zustimmung; `__oppref` gilt 30 Tage ab dem letzten Anzeigenklick, `__obref` 365 Tage ab Erstellung ohne Verlängerung.
+
+<details id="vorlage-snapchat-pixel">
+	<summary>Snapchat Pixel</summary>
+
+    ---snapchat|Snapchat Pixel|Der Snap Pixel misst die Wirksamkeit von Werbeanzeigen auf Snapchat anhand der Aktionen, die Besucher auf unserer Website ausführen, und ermöglicht Retargeting. Bei Zustimmung findet ein Datenaustausch mit Snap statt.|Wir nutzen den Snap Pixel zur Erfolgsmessung unserer Snapchat-Werbeanzeigen.
+    _scid|beispiel.de|Identifiziert den Browser, um Aktionen auf dieser Website Werbeanzeigen zuzuordnen.|1 Jahr
+    _scid|snapchat.com|Identifiziert den Browser, um Werbeanzeigen auf Snapchat zu messen.|1 Jahr
+    _sctr|snapchat.com|Steuert, ob der Pixel Tags von Drittanbietern aufruft.|1 Jahr
+    sc_at|snapchat.com|Identifiziert den Browser websiteübergreifend.|1 Jahr
+
+</details>
+
+Namen und Laufzeiten stammen aus der Snap-Cookie-Liste und der Conversions-API-Doku (First-Party-`_scid`). Cookie-Datenbanken nennen zusätzlich `_scid_r` auf der eigenen Domain (inoffiziell, Laufzeit unbekannt) – im Browser prüfen und ggf. ergänzen.
+
 ## Externe Inhalte
 
 <details id="vorlage-youtube">
@@ -304,6 +364,49 @@ Mit dem Parameter `?dnt=1` in der Player-URL setzt Vimeo nur noch die technisch 
 Google Fonts setzt keine Cookies und legt nichts im Browser ab. Werden die Schriften aber von `fonts.googleapis.com`/`fonts.gstatic.com` geladen, erhält Google bei jedem Seitenaufruf IP-Adresse, User-Agent und Referrer. Das LG München I (Urteil vom 20.01.2022, Az. 3 O 17493/20) hat das ohne Einwilligung als DSGVO-Verstoß gewertet. Empfehlung: Schriften lokal hosten; dann ist kein Eintrag nötig.
 </details>
 
+<details id="vorlage-openstreetmap">
+	<summary>OpenStreetMap</summary>
+
+    ---osm|OpenStreetMap|OpenStreetMap stellt interaktive Karten bereit. Beim Laden der Karte werden u. a. Ihre IP-Adresse und die aufgerufene Seite an die OpenStreetMap Foundation (UK) und ihr Server-Netzwerk übertragen. Die Karte wird erst nach Ihrer Zustimmung geladen.|Die Anfahrt zu unserem Standort stellen wir auf einer Karte von OpenStreetMap dar. Dies erfordert Ihre Zustimmung.
+
+</details>
+
+Das Embed (`openstreetmap.org/export/embed.html`) und die Kartenkacheln (`tile.openstreetmap.org`, z.B. mit Leaflet) setzen beim Laden keine Cookies (beobachtet). IP-Adresse und Referrer gehen trotzdem an die OSMF und ihr CDN – deshalb die Gruppe ohne Cookie-Zeilen. Die Tile Usage Policy verlangt einen gültigen Referrer; eine restriktive `Referrer-Policy` blockiert die Kacheln.
+
+<details id="vorlage-instagram">
+	<summary>Instagram</summary>
+
+    ---instagram|Instagram|Über die Plattform „Instagram“ eingebettete Beiträge. Bei Zustimmung findet ein Datenaustausch mit Meta Platforms Ireland Ltd. statt; Meta kann dabei auch ohne Instagram-Konto Informationen über Ihren Besuch erhalten.|Wir verwenden Instagram zur Darstellung von Beiträgen auf unserer Seite.
+
+</details>
+
+<details id="vorlage-facebook">
+	<summary>Facebook</summary>
+
+    ---facebook|Facebook|Über die Plattform „Facebook“ eingebettete Inhalte (z.B. Seiten, Beiträge, Videos). Bei Zustimmung findet ein Datenaustausch mit Meta Platforms Ireland Ltd. statt; Meta kann dabei auch ohne Facebook-Konto Informationen über Ihren Besuch erhalten.|Wir verwenden Facebook zur Darstellung von Inhalten auf unserer Seite.
+
+</details>
+
+<details id="vorlage-x-twitter">
+	<summary>X (Twitter)</summary>
+
+    ---x|X|Über die Plattform „X“ (ehemals Twitter) eingebettete Beiträge und Timelines. Bei Zustimmung findet ein Datenaustausch mit X Corp. (USA) statt; X zählt dabei u. a. die Aufrufe eingebetteter Beiträge.|Wir verwenden X zur Darstellung von Beiträgen auf unserer Seite.
+
+</details>
+
+<details id="vorlage-calendly">
+	<summary>Calendly</summary>
+
+    ---calendly|Calendly|Über „Calendly“ eingebettete Terminbuchung. Bei Zustimmung findet ein Datenaustausch mit Calendly LLC (USA) statt.|Für die Online-Terminbuchung verwenden wir Calendly.
+
+</details>
+
+Für Instagram, Facebook, X und Calendly gibt es keine offiziellen Cookie-Listen für das Embed; die Vorlagen enthalten deshalb nur die Gruppe (für Banner und Maske). Vor dem Livegang im Browser messen und Cookie-Zeilen ergänzen. Häufig genannt (inoffiziell, nicht geprüft):
+
+- **Instagram/Facebook:** `datr` (facebook.com, 2 Jahre), bei Instagram zusätzlich `ig_did`, `mid`, `csrftoken` (instagram.com). Like- und Kommentar-Plugin hat Meta am 10.02.2026 abgeschaltet; Page Plugin, Embedded Posts und Video-Player bleiben.
+- **X:** `guest_id` (twitter.com, 2 Jahre), `guest_id_ads`, `guest_id_marketing` (je 1 Jahr), `personalization_id`, `muc`. Beim Abruf beobachtet wurde nur `__cf_bm` (Cloudflare, 30 Minuten).
+- **Calendly:** `__cf_bm`, `_cfuvid` (Cloudflare) sowie u. a. `_calendly_session` (21 Tage), `AWSALB`/`AWSALBCORS` (7 Tage), `ajs_anonymous_id`, `mp_*` (Mixpanel). Der eigene Cookie-Hinweis von Calendly lässt sich mit `hide_gdpr_banner=1` ausblenden.
+
 ## Veraltete Einträge
 
 Diese Einträge finden sich häufig in älteren Konfigurationen, werden aber nicht mehr gesetzt und sollten entfernt werden:
@@ -332,4 +435,11 @@ Diese Einträge finden sich häufig in älteren Konfigurationen, werden aber nic
 - Cloudflare: [Cloudflare-Cookies](https://developers.cloudflare.com/fundamentals/reference/policies-compliances/cloudflare-cookies/), [Clearance](https://developers.cloudflare.com/cloudflare-challenges/concepts/clearance/), [Challenge Passage](https://developers.cloudflare.com/cloudflare-challenges/challenge-types/challenge-pages/challenge-passage/)
 - Eye-Able: [Verwendet Eye-Able Assist Cookies?](https://help.eye-able.com/verwendet-eye-able-assist-cookies), [Wie Eye-Able Einstellungen speichert](https://eye-able.com/de/blog/wie-eye-able-deine-einstellungen-speichert)
 - TikTok: [Cookies mit dem TikTok Pixel](https://ads.tiktok.com/help/article/using-cookies-with-tiktok-pixel?lang=en)
+- Microsoft: [UET einrichten](https://github.com/MicrosoftDocs/Advertising/blob/main/advertising/msa-help/hlp_BA_CONC_UET_Setup_Master.md), Laufzeiten u. a. [Consentify: _uetmsclkid](https://www.consentify.app/en/cookies/_uetmsclkid), [CookieSentry: Microsoft Advertising](https://cookiesentry.com/cookies/providers/microsoft-advertising)
+- OpenAI: [Measurement Pixel](https://developers.openai.com/ads/measurement-pixel), [Supported Events](https://developers.openai.com/ads/supported-events)
 - Friendly Captcha: [Cookies](https://friendlycaptcha.com/legal/cookies-service-users/)
+- Microsoft Clarity: [Clarity-Cookies](https://learn.microsoft.com/en-us/clarity/setup-and-installation/clarity-cookies), [Consent Mode](https://learn.microsoft.com/en-us/clarity/setup-and-installation/consent-mode), [Consent API v2](https://learn.microsoft.com/en-us/clarity/setup-and-installation/clarity-consent-api-v2), Laufzeiten u. a. [cookiefix.ro](https://cookiefix.ro/en/cookie-database/microsoft-clarity)
+- Snap: [Cookie-Informationen](https://www.snap.com/privacy/cookie-information), [Conversions API Parameter](https://developers.snap.com/marketing-api/Conversions-API/Parameters)
+- OpenStreetMap: [Datenschutzerklärung der OSMF](https://osmfoundation.org/wiki/Privacy_Policy), [Tile Usage Policy](https://operations.osmfoundation.org/policies/tiles/)
+- Meta-Embeds: [Cookie-Richtlinie](https://www.facebook.com/privacy/policies/cookies/), [Social Plugins](https://developers.facebook.com/docs/plugins/)
+- X: [X-Cookies](https://help.x.com/en/rules-and-policies/x-cookies)
