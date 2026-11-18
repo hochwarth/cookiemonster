@@ -25,7 +25,7 @@ class TextformatterCookieTable extends Textformatter implements Module
     }
 
     /**
-     * @param string $str
+     * @param mixed $str
      */
     public function formatValue(Page $page, Field $field, &$str): void
     {

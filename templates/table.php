@@ -6,7 +6,7 @@ namespace ProcessWire;
 
 /**
  * @var array<string, string> $headers
- * @var array $cookies
+ * @var array<int, array<string, mixed>> $cookies
  * @var CookieMonster $cmnstr
  * @var Sanitizer $sanitizer
  */

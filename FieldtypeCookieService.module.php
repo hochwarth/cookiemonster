@@ -33,6 +33,8 @@ class FieldtypeCookieService extends Fieldtype
 
     /**
      * Akzeptiert einen Schlüssel, eine Liste ('a|b', 'a b', 'a,b') oder ein Array.
+     *
+     * @param mixed $value
      */
     public function sanitizeValue(Page $page, Field $field, mixed $value): string
     {
@@ -71,14 +73,14 @@ class FieldtypeCookieService extends Fieldtype
     public function isEmptyValue(Field $field, mixed $value): bool
     {
         if ($value instanceof Selector) {
-            return $value->operator === '!=' && (string) $value->value !== '';
+            return $value->operator === '!=' && \implode('', (array) $value->value) !== '';
         }
 
         return parent::isEmptyValue($field, $value);
     }
 
     /**
-     * @param PageFinderDatabaseQuerySelect|DatabaseQuerySelect $query
+     * @param PageFinderDatabaseQuerySelect $query
      * @param string $table
      * @param string $subfield
      * @param string $operator
@@ -115,8 +117,12 @@ class FieldtypeCookieService extends Fieldtype
 
     public function getInputfield(Page $page, Field $field): Inputfield
     {
-        /** @var InputfieldCookieService $inputfield */
         $inputfield = $this->wire()->modules->get('InputfieldCookieService');
+
+        if (!$inputfield instanceof InputfieldCookieService) {
+            throw new WireException('InputfieldCookieService is not installed');
+        }
+
         $inputfield->description = $this->_('Bei mehreren Einträgen erscheint der Inhalt erst, wenn allen zugestimmt wurde.');
 
         $cookieMonster = $this->wire()->modules->get('CookieMonster');
@@ -164,8 +170,12 @@ class FieldtypeCookieService extends Fieldtype
             $items .= '<li>' . $sanitizer->entities($label) . '</li>';
         }
 
-        /** @var InputfieldMarkup $f */
         $f = $this->wire()->modules->get('InputfieldMarkup');
+
+        if (!$f instanceof InputfieldMarkup) {
+            return $inputfields;
+        }
+
         $f->attr('name', '_cookie_services');
         $f->label = $this->_('Auswählbare Cookie-Dienste');
         $f->icon = 'shield';

@@ -71,7 +71,7 @@ class InputfieldCookieService extends InputfieldAsmSelect
             return '';
         }
 
-        $name = $this->wire()->sanitizer->entities((string) $this->attr('name') . '__match');
+        $name = $this->wire()->sanitizer->entities($this->name . '__match');
         $choices = [
             CookieMonster::ALL_SERVICES => $this->_('UND: Allen muss zugestimmt sein'),
             CookieMonster::MATCH_ANY => $this->_('ODER: Mindestens einem muss zugestimmt sein'),
@@ -105,6 +105,7 @@ class InputfieldCookieService extends InputfieldAsmSelect
 
     /**
      * @param string $key
+     * @param mixed $value
      */
     public function setAttribute($key, mixed $value): self
     {
@@ -144,7 +145,6 @@ class InputfieldCookieService extends InputfieldAsmSelect
         $asmUrl = $config->urls('InputfieldAsmSelect');
 
         foreach ([$config->scripts, $config->styles] as $files) {
-            /** @var FilenameArray $files */
             foreach (\iterator_to_array($files) as $file) {
                 $file = (string) $file;
 
@@ -181,7 +181,7 @@ class InputfieldCookieService extends InputfieldAsmSelect
         parent::setAttribute('value', $value);
 
         if ($this->get('showMatch')) {
-            $this->matchAny = $input->get((string) $this->attr('name') . '__match') === CookieMonster::MATCH_ANY;
+            $this->matchAny = $input->get($this->name . '__match') === CookieMonster::MATCH_ANY;
         }
 
         return $this;
