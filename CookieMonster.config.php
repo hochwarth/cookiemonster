@@ -8,6 +8,7 @@ $pwConfig = wire()->config;
 $isConfigPage = wire()->process instanceof ProcessModule && wire()->input->get('name') === 'CookieMonster';
 /** @var CookieMonster|null $cmnstr */
 $cmnstr = $isConfigPage ? wire('cmnstr') : null;
+$hasGtm = (bool) $cmnstr?->get('gtm_id');
 
 $config = [
     [
@@ -251,6 +252,7 @@ $config = [
                 'label' => __('Kategorien'),
                 'icon' => 'th-list',
                 'description' => __('Jede Kategorie erscheint als eigener Abschnitt im Einstellungsdialog.'),
+                'notes' => __('Fertige Zeilen für gängige Dienste (YouTube, Google Analytics, Matomo, Meta Pixel …): [Cookie-Vorlagen](https://github.com/hochwarth/cookiemonster/blob/master/docs/cookie-vorlagen.md)'),
                 'children' => [
                     [
                         'type' => 'fieldset',
@@ -279,7 +281,6 @@ $config = [
                                 'name' => 'essential_cookies',
                                 'label' => __('Dienste und Cookies'),
                                 'description' => __('Pro Zeile ein Dienst `---ID|Titel|Beschreibung|Hinweis` oder ein Cookie `Name|Anbieter|Zweck|Dauer`. Cookies gehören zum Dienst darüber, ohne Dienst direkt zur Kategorie.'),
-                                'notes' => __("`\*` im Namen: beliebige Zeichen, passende Cookies werden ohne Zustimmung gelöscht. Dauer: leer = Sitzung, höchstens 400 Tage; für Browser-Speicher `localStorage`, `sessionStorage` oder `IndexedDB`.\n`Hinweis` erscheint in der Inhaltsmaske. Schlüssel für Masken und Tracking-Codes: Kategorie-Dienst-ID, z.B. `statistics-ga`.\nVorbefüllt mit den Standard-Cookies von ProcessWire. Weicht `\$config->sessionName` ab oder ist `sessionChallenge` aktiv, von Hand anpassen."),
                                 'value' => '---processwire|ProcessWire|Technisch notwendige Cookies für den Betrieb dieser Website und das Speichern Ihrer Cookie-Auswahl.|\nwire|Diese Website|Hält die Sitzung aufrecht, z.B. für Formulare und die Anmeldung.|Sitzung\ncmnstr|Diese Website|Speichert Ihre Cookie-Einstellungen, bei aktivem Einwilligungsprotokoll mit einer zufälligen Kennung für den Nachweis.|180 Tage',
                                 'useLanguages' => true,
                                 'rows' => 8,
@@ -321,7 +322,6 @@ $config = [
                                 'name' => 'functional_cookies',
                                 'label' => __('Dienste und Cookies'),
                                 'description' => __('Pro Zeile ein Dienst `---ID|Titel|Beschreibung|Hinweis` oder ein Cookie `Name|Anbieter|Zweck|Dauer`. Cookies gehören zum Dienst darüber, ohne Dienst direkt zur Kategorie.'),
-                                'notes' => __("`\*` im Namen: beliebige Zeichen, passende Cookies werden ohne Zustimmung gelöscht. Dauer: leer = Sitzung, höchstens 400 Tage; für Browser-Speicher `localStorage`, `sessionStorage` oder `IndexedDB`.\n`Hinweis` erscheint in der Inhaltsmaske. Schlüssel für Masken und Tracking-Codes: Kategorie-Dienst-ID, z.B. `statistics-ga`.\nVorlagen für gängige Dienste: `site/modules/CookieMonster/docs/cookie-vorlagen.md`."),
                                 'placeholder' => __("---recaptcha|Google reCAPTCHA|Schützt unsere Formulare vor Spam und automatisierten Zugriffen.|Das Formular ist mit Google reCAPTCHA geschützt. Dies erfordert Ihre Zustimmung.\n_GRECAPTCHA|google.com|Speichert das Ergebnis der Risikoanalyse, um echte Besucher von Bots zu unterscheiden.|6 Monate"),
                                 'value' => '',
                                 'useLanguages' => true,
@@ -365,7 +365,6 @@ $config = [
                                 'name' => 'statistics_cookies',
                                 'label' => __('Dienste und Cookies'),
                                 'description' => __('Pro Zeile ein Dienst `---ID|Titel|Beschreibung|Hinweis` oder ein Cookie `Name|Anbieter|Zweck|Dauer`. Cookies gehören zum Dienst darüber, ohne Dienst direkt zur Kategorie.'),
-                                'notes' => __("`\*` im Namen: beliebige Zeichen, passende Cookies werden ohne Zustimmung gelöscht. Dauer: leer = Sitzung, höchstens 400 Tage; für Browser-Speicher `localStorage`, `sessionStorage` oder `IndexedDB`.\n`Hinweis` erscheint in der Inhaltsmaske. Schlüssel für Masken und Tracking-Codes: Kategorie-Dienst-ID, z.B. `statistics-ga`.\nVorlagen für gängige Dienste: `site/modules/CookieMonster/docs/cookie-vorlagen.md`."),
                                 'placeholder' => __("---matomo|Matomo|Erfasst das Nutzungsverhalten pseudonymisiert, um Besucherstatistiken bereitzustellen.|\n_pk_id.*|example.com|Speichert eine zufällige Besucher-ID, um wiederkehrende Besucher zu erkennen.|6 Monate\n_pk_ses.*|example.com|Fasst die Seitenaufrufe eines Besuchs zusammen.|30 Minuten"),
                                 'value' => '',
                                 'useLanguages' => true,
@@ -409,7 +408,6 @@ $config = [
                                 'name' => 'marketing_cookies',
                                 'label' => __('Dienste und Cookies'),
                                 'description' => __('Pro Zeile ein Dienst `---ID|Titel|Beschreibung|Hinweis` oder ein Cookie `Name|Anbieter|Zweck|Dauer`. Cookies gehören zum Dienst darüber, ohne Dienst direkt zur Kategorie.'),
-                                'notes' => __("`\*` im Namen: beliebige Zeichen, passende Cookies werden ohne Zustimmung gelöscht. Dauer: leer = Sitzung, höchstens 400 Tage; für Browser-Speicher `localStorage`, `sessionStorage` oder `IndexedDB`.\n`Hinweis` erscheint in der Inhaltsmaske. Schlüssel für Masken und Tracking-Codes: Kategorie-Dienst-ID, z.B. `statistics-ga`.\nVorlagen für gängige Dienste: `site/modules/CookieMonster/docs/cookie-vorlagen.md`."),
                                 'placeholder' => __("---meta|Meta Pixel|Misst die Wirksamkeit unserer Werbeanzeigen auf Facebook und Instagram.|\n_fbp|example.com|Identifiziert den Browser, um Werbeanzeigen auszuliefern und deren Erfolg zu messen.|90 Tage"),
                                 'value' => '',
                                 'useLanguages' => true,
@@ -453,7 +451,6 @@ $config = [
                                 'name' => 'external_cookies',
                                 'label' => __('Dienste und Cookies'),
                                 'description' => __('Pro Zeile ein Dienst `---ID|Titel|Beschreibung|Hinweis` oder ein Cookie `Name|Anbieter|Zweck|Dauer`. Cookies gehören zum Dienst darüber, ohne Dienst direkt zur Kategorie.'),
-                                'notes' => __("`\*` im Namen: beliebige Zeichen, passende Cookies werden ohne Zustimmung gelöscht. Dauer: leer = Sitzung, höchstens 400 Tage; für Browser-Speicher `localStorage`, `sessionStorage` oder `IndexedDB`.\n`Hinweis` erscheint in der Inhaltsmaske. Schlüssel für Masken und Tracking-Codes: Kategorie-Dienst-ID, z.B. `statistics-ga`.\nVorlagen für gängige Dienste: `site/modules/CookieMonster/docs/cookie-vorlagen.md`."),
                                 'placeholder' => __("---youtube|YouTube|Über YouTube eingebettete Videos. Bei Zustimmung findet ein Datenaustausch mit YouTube bzw. Google statt.|Wir verwenden YouTube zur Darstellung von Videos.\nYSC|youtube.com|Schützt vor Missbrauch und ordnet die Anfragen einer Sitzung zu.|Sitzung"),
                                 'value' => '',
                                 'useLanguages' => true,
@@ -553,29 +550,17 @@ $config = [
         'children' => [
             [
                 'type' => 'fieldset',
-                'label' => __('Google Analytics'),
-                'name' => 'google_analytics',
-                'icon' => 'line-chart',
+                'label' => __('Google Search Console'),
+                'icon' => 'check-circle',
                 'collapsed' => true,
                 'children' => [
                     [
-                        'name' => 'ga_property_id',
+                        'name' => 'google_site_verification',
                         'type' => 'text',
-                        'pattern' => '^(G|AW|DC|UA)-[A-Za-z0-9\-]+$',
-                        'label' => __('Mess-ID'),
-                        'description' => __('Mit einer ID wird Google Analytics aktiviert.'),
-                        'notes' => __('GA4: `G-XXXXXXXXXX`. Andere gtag.js-IDs wie `AW-…` (Google Ads) oder `DC-…` (Floodlight) funktionieren ebenfalls.'),
+                        'label' => __('Bestätigungscode'),
+                        'description' => __('Wert des Meta-Tags `google-site-verification` aus der Search Console (nur der Inhalt von `content`).'),
+                        'notes' => __('Wird unabhängig von der Zustimmung ausgegeben – das Meta-Tag setzt keine Cookies.'),
                         'value' => '',
-                    ],
-                    [
-                        'name' => 'ga_cookie_service',
-                        'type' => 'CookieService',
-                        'showMatch' => true,
-                        'label' => __('Erforderliche Zustimmung'),
-                        'description' => __('Der Code wird erst ausgegeben, wenn der Besucher diesen Kategorien bzw. Diensten zugestimmt hat.'),
-                        'notes' => __('Leer: erst nach Zustimmung zu allen Diensten der Statistik-Cookies (ist die Kategorie deaktiviert, nie). Eine Kategorie gilt erst als zugestimmt, wenn allen ihren Diensten zugestimmt wurde.'),
-                        'value' => [],
-                        'showIf' => 'ga_property_id!=""',
                     ],
                 ],
             ],
@@ -594,6 +579,7 @@ $config = [
                         'description' => __('Mit einer ID wird der Google Tag Manager aktiviert.'),
                         'notes' => __('Format: `GTM-XXXXXXX`'),
                         'value' => '',
+                        'columnWidth' => 50,
                     ],
                     [
                         'name' => 'gtm_cookie_service',
@@ -601,9 +587,119 @@ $config = [
                         'showMatch' => true,
                         'label' => __('Erforderliche Zustimmung'),
                         'description' => __('Der Code wird erst ausgegeben, wenn der Besucher diesen Kategorien bzw. Diensten zugestimmt hat.'),
-                        'notes' => __("Leer: erst nach Zustimmung zu allen Diensten der Statistik-Cookies (ist die Kategorie deaktiviert, nie). Eine Kategorie gilt erst als zugestimmt, wenn allen ihren Diensten zugestimmt wurde.\nWelche Tags im Container feuern, steuert der Google Consent Mode."),
+                        'notes' => __("Alle Dienste wählen, deren Tags im Container laufen, mit „mindestens einem (ODER)“. Google Analytics, Google Ads und Floodlight zusätzlich unter „Google-Dienste“ zuordnen.\nContainer einrichten: README, „Google Tag Manager anbinden“."),
                         'value' => [],
+                        'columnWidth' => 50,
                         'showIf' => 'gtm_id!=""',
+                    ],
+                ],
+            ],
+            [
+                'type' => 'fieldset',
+                'label' => __('Google-Dienste'),
+                'name' => 'google_direct',
+                'description' => __('Mit ID bindet das Modul das Tag direkt ein. Ohne ID, aber mit Google Tag Manager, lädt der Container das Tag; die Zustimmung meldet das Modul an Google (Google Consent Mode).'),
+                'icon' => 'google',
+                // Mit Tag Manager ist hier die Zustimmung zuzuordnen
+                'collapsed' => $hasGtm ? Inputfield::collapsedNo : Inputfield::collapsedYes,
+                'children' => [
+                    [
+                        'type' => 'fieldset',
+                        'label' => __('Google Analytics'),
+                        'name' => 'google_analytics',
+                        'icon' => 'line-chart',
+                        'children' => [
+                            [
+                                'name' => 'ga_property_id',
+                                'type' => 'text',
+                                'pattern' => '^(G|AW|DC|UA)-[A-Za-z0-9\-]+$',
+                                'label' => __('Mess-ID'),
+                                'description' => __('Mit einer ID wird Google Analytics aktiviert.'),
+                                'notes' => __("Format: `G-XXXXXXXXXX`\nBei Einbindung über den Google Tag Manager leer lassen."),
+                                'value' => '',
+                                // Mit Tag Manager lädt der Container das Tag, die ID ist dann selten nötig
+                                'collapsed' => $hasGtm ? Inputfield::collapsedYes : Inputfield::collapsedNo,
+                            ],
+                            [
+                                'name' => 'ga_cookie_service',
+                                'type' => 'CookieService',
+                                'showMatch' => true,
+                                'label' => __('Erforderliche Zustimmung'),
+                                'description' => __('Der Code wird erst ausgegeben, wenn der Besucher diesen Kategorien bzw. Diensten zugestimmt hat.'),
+                                'notes' => __('Gibt frei: `analytics_storage`'),
+                                'value' => [],
+                                'showIf' => 'ga_property_id|gtm_id!=""',
+                            ],
+                        ],
+                    ],
+                    [
+                        'type' => 'fieldset',
+                        'label' => __('Google Ads'),
+                        'name' => 'google_ads',
+                        'icon' => 'bullhorn',
+                        'children' => [
+                            [
+                                'name' => 'google_ads_id',
+                                'type' => 'text',
+                                'pattern' => '^AW-[0-9]+$',
+                                'label' => __('Conversion-ID'),
+                                'description' => __('Mit einer ID wird das Google-Ads-Tag aktiviert.'),
+                                'notes' => __("Format: `AW-XXXXXXXXX`\nBei Einbindung über den Google Tag Manager leer lassen."),
+                                'value' => '',
+                                // Mit Tag Manager lädt der Container das Tag, die ID ist dann selten nötig
+                                'collapsed' => $hasGtm ? Inputfield::collapsedYes : Inputfield::collapsedNo,
+                            ],
+                            [
+                                'name' => 'google_ads_cookie_service',
+                                'type' => 'CookieService',
+                                'showMatch' => true,
+                                'label' => __('Erforderliche Zustimmung'),
+                                'description' => __('Der Code wird erst ausgegeben, wenn der Besucher diesen Kategorien bzw. Diensten zugestimmt hat. Gilt für die Conversion-Messung.'),
+                                'notes' => __('Gibt frei: `ad_storage`, `ad_user_data`'),
+                                'value' => [],
+                                'columnWidth' => 50,
+                                'showIf' => 'google_ads_id|gtm_id!=""',
+                            ],
+                            [
+                                'name' => 'google_ads_remarketing',
+                                'type' => 'CookieService',
+                                'label' => __('Remarketing'),
+                                'description' => __('Zustimmung, mit der Google dem Besucher personalisierte Werbung zeigen darf (Remarketing-Listen).'),
+                                'notes' => __('Gibt frei: `ad_personalization`'),
+                                'value' => [],
+                                'columnWidth' => 50,
+                                'showIf' => 'google_ads_id|gtm_id!=""',
+                            ],
+                        ],
+                    ],
+                    [
+                        'type' => 'fieldset',
+                        'label' => __('Floodlight'),
+                        'name' => 'floodlight',
+                        'icon' => 'flag',
+                        'children' => [
+                            [
+                                'name' => 'floodlight_id',
+                                'type' => 'text',
+                                'pattern' => '^DC-[0-9]+$',
+                                'label' => __('Advertiser-ID'),
+                                'description' => __('Mit einer ID wird das Floodlight-Tag (Campaign Manager 360) aktiviert.'),
+                                'notes' => __("Format: `DC-XXXXXXXX`\nBei Einbindung über den Google Tag Manager leer lassen."),
+                                'value' => '',
+                                // Mit Tag Manager lädt der Container das Tag, die ID ist dann selten nötig
+                                'collapsed' => $hasGtm ? Inputfield::collapsedYes : Inputfield::collapsedNo,
+                            ],
+                            [
+                                'name' => 'floodlight_cookie_service',
+                                'type' => 'CookieService',
+                                'showMatch' => true,
+                                'label' => __('Erforderliche Zustimmung'),
+                                'description' => __('Der Code wird erst ausgegeben, wenn der Besucher diesen Kategorien bzw. Diensten zugestimmt hat.'),
+                                'notes' => __('Gibt frei: `ad_storage`, `ad_user_data`'),
+                                'value' => [],
+                                'showIf' => 'floodlight_id|gtm_id!=""',
+                            ],
+                        ],
                     ],
                 ],
             ],
@@ -818,22 +914,6 @@ $config = [
                         'showIf' => 'openai_pixel_id!=""',
                     ],
                 ]
-            ],
-            [
-                'type' => 'fieldset',
-                'label' => __('Google Search Console'),
-                'icon' => 'check-circle',
-                'collapsed' => true,
-                'children' => [
-                    [
-                        'name' => 'google_site_verification',
-                        'type' => 'text',
-                        'label' => __('Bestätigungscode'),
-                        'description' => __('Wert des Meta-Tags `google-site-verification` aus der Search Console (nur der Inhalt von `content`).'),
-                        'notes' => __('Wird unabhängig von der Zustimmung ausgegeben – das Meta-Tag setzt keine Cookies.'),
-                        'value' => '',
-                    ],
-                ],
             ],
         ],
     ],

@@ -61,6 +61,8 @@ class InputfieldCookieService extends InputfieldAsmSelect
         }
 
         $this->attr('data-asmopt', \json_encode($settings));
+        // AdminThemeUikit gibt Selects außerhalb von Spalten sonst nur `width: auto`; asmSelect übernimmt die Klasse
+        $this->addClass('InputfieldMaxWidth');
 
         return InputfieldSelect::___render() . $this->renderMatch();
     }
@@ -71,22 +73,24 @@ class InputfieldCookieService extends InputfieldAsmSelect
             return '';
         }
 
-        $name = $this->wire()->sanitizer->entities($this->name . '__match');
+        $sanitizer = $this->wire()->sanitizer;
+        $name = $sanitizer->entities($this->name . '__match');
         $choices = [
-            CookieMonster::ALL_SERVICES => $this->_('UND: Allen muss zugestimmt sein'),
-            CookieMonster::MATCH_ANY => $this->_('ODER: Mindestens einem muss zugestimmt sein'),
+            CookieMonster::ALL_SERVICES => $this->_('allen (UND)'),
+            CookieMonster::MATCH_ANY => $this->_('mindestens einem (ODER)'),
         ];
         $out = '';
 
         foreach ($choices as $value => $label) {
             $checked = ($value === CookieMonster::MATCH_ANY) === $this->matchAny ? ' checked' : '';
-            $out .= "<br><label class='uk-margin-right'><input type='radio' class='uk-radio' name='{$name}' value='{$value}'{$checked}> "
-                . $this->wire()->sanitizer->entities($label) . '</label>';
+            $out .= "<label class='uk-margin-small-right'><input type='radio' class='uk-radio' name='{$name}' value='{$value}'{$checked}> "
+                . $sanitizer->entities($label) . '</label>';
         }
 
-        $legend = $this->wire()->sanitizer->entities($this->_('Bei mehreren Einträgen:'));
+        $legend = $sanitizer->entities($this->_('Zustimmung nötig zu:'));
 
-        return "<div class='InputfieldCookieServiceMatch uk-margin-small-top'><span class='uk-margin-small-right'>{$legend}</span>{$out}</div>";
+        return "<div class='InputfieldCookieServiceMatch uk-flex uk-flex-wrap uk-flex-middle uk-margin-small-top' role='radiogroup' aria-labelledby='{$name}_legend'>"
+            . "<span id='{$name}_legend' class='uk-margin-small-right'>{$legend}</span>{$out}</div>";
     }
 
     /**
@@ -206,8 +210,24 @@ class InputfieldCookieService extends InputfieldAsmSelect
             $parent = self::GROUP_PREFIX . \ltrim($groupId, '_');
             $this->addOption($parent, $group['label'], ['disabled' => 'disabled']);
 
+            $categoryLabel = null;
+
             foreach ($group['options'] as $key => $label) {
+                if ($key === $groupId) {
+                    $categoryLabel = \sprintf($this->_('∗ Gesamte Kategorie (%s)'), $key);
+
+                    continue;
+                }
+
+                if (\str_starts_with($label, "{$group['label']}: ")) {
+                    $label = \substr($label, \strlen("{$group['label']}: "));
+                }
+
                 $this->addOption($key, "\u{00A0}\u{00A0}\u{00A0}$label");
+            }
+
+            if ($categoryLabel !== null) {
+                $this->addOption($groupId, "\u{00A0}\u{00A0}\u{00A0}$categoryLabel");
             }
         }
     }

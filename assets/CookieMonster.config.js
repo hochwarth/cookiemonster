@@ -159,6 +159,24 @@ $(() => {
 		$(checkbox).on("change", mark);
 	}
 
+	// Mit Tag Manager lädt der Container die Google-Tags: eigene IDs klappen zu, die Zuordnung auf
+	const $gtmId = $("#Inputfield_gtm_id");
+	const $googleIds = $(
+		"#wrap_Inputfield_ga_property_id, #wrap_Inputfield_google_ads_id, #wrap_Inputfield_floodlight_id",
+	);
+
+	$gtmId.on("change", () => {
+		const hasGtm = String($gtmId.val()).trim() !== "";
+
+		for (const wrap of $googleIds.get()) {
+			Reflect.get(window, "Inputfields").toggle($(wrap), !hasGtm);
+		}
+
+		if (hasGtm) {
+			Reflect.get(window, "Inputfields").toggle($(".Inputfield_google_direct"), true);
+		}
+	});
+
 	// Highlight-Ranges erreichen keinen Textarea-Inhalt, daher übernimmt ein contenteditable die Eingabe.
 	// Ohne Highlight-API oder plaintext-only bleibt das Textarea unverändert sichtbar.
 	if ("highlights" in CSS && supportsPlaintextOnly()) {
