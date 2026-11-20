@@ -10,6 +10,8 @@ const statusRegion = document.querySelector("#cmnstr-status");
  * @property {string[]} once Service keys unlocked for this page view only
  * @property {string[]} tags Unlocked tag methods
  * @property {Record<string, "granted" | "denied">} consentMode Google Consent Mode update
+ * @property {{ decided: boolean } & Record<string, unknown>} dataLayer Consent per service for the
+ *   dataLayer (`cmnstr`)
  * @property {string} message Status message for the live region
  */
 
@@ -107,6 +109,11 @@ async function applyConsent(state, submitter) {
 	// Consent Mode first, so tags loaded below start with the new state
 	if ("gtag" in window && typeof window.gtag === "function") {
 		window.gtag("consent", "update", state.consentMode);
+	}
+
+	if ("dataLayer" in window && Array.isArray(window.dataLayer)) {
+		window.dataLayer.push({ cmnstr: state.dataLayer });
+		window.dataLayer.push({ event: "cmnstr_consent" });
 	}
 
 	if (dialogElement instanceof HTMLDialogElement) {

@@ -15,7 +15,7 @@ $id = $sanitizer->name($propertyId);
 ?>
 
 <?php if (!$noScript): ?>
-	<!-- Global Site Tag (gtag.js) - Google Analytics -->
+	<!-- Google tag (gtag.js) -->
 	<script nonce="<?= $cspNonce; ?>" async src="https://www.googletagmanager.com/gtag/js?id=<?= $id; ?>"></script>
 	<script nonce="<?= $cspNonce; ?>">
 		gtag('js', new Date());

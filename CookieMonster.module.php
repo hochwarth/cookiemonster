@@ -59,6 +59,11 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
         'dnt_notice',
         'ga_property_id',
         'ga_cookie_service',
+        'google_ads_id',
+        'google_ads_cookie_service',
+        'google_ads_remarketing',
+        'floodlight_id',
+        'floodlight_cookie_service',
         'gtm_id',
         'gtm_cookie_service',
         'matomo_enabled',
@@ -105,6 +110,27 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
         'statistics' => ['analytics_storage'],
         'marketing' => ['ad_storage', 'ad_user_data', 'ad_personalization'],
         'external' => ['personalization_storage'],
+    ];
+
+    /**
+     * Google-Consent-Typen außer `security_storage` (immer `granted`).
+     */
+    public const GOOGLE_CONSENT_TYPES = [
+        'ad_storage',
+        'ad_user_data',
+        'ad_personalization',
+        'analytics_storage',
+        'functionality_storage',
+        'personalization_storage',
+    ];
+
+    /**
+     * Google-Produkte: Tag-Präfix => [ID-Feld, freigegebene Consent-Typen].
+     */
+    private const GOOGLE_CONSENT_PRODUCTS = [
+        'ga' => ['ga_property_id', ['analytics_storage']],
+        'floodlight' => ['floodlight_id', ['ad_storage', 'ad_user_data']],
+        'google_ads' => ['google_ads_id', ['ad_storage', 'ad_user_data']],
     ];
 
     public const CONSENT_PATH = '/_cmnstr/consent';
@@ -189,6 +215,8 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 
     private const TAG_LABELS = [
         'ga' => 'Google Analytics',
+        'google_ads' => 'Google Ads',
+        'floodlight' => 'Floodlight',
         'gtm' => 'Google Tag Manager',
         'linkedin_insight' => 'LinkedIn Insight',
         'matomo' => 'Matomo',
@@ -201,6 +229,8 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
      * Kategorie, auf die ein Tag ohne ausgewählten Dienst zurückfällt; nicht aufgeführte Tags nutzen `statistics`.
      */
     private const TAG_FALLBACK_CATEGORIES = [
+        'google_ads' => 'marketing',
+        'floodlight' => 'marketing',
         'linkedin_insight' => 'marketing',
         'meta_pixel' => 'marketing',
         'microsoft_uet' => 'marketing',
@@ -585,6 +615,36 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
         $this->localizedGroups = [];
         $this->offeredServices = null;
         $this->cookieEntries = null;
+    }
+
+    /**
+     * Schreibt Dienst-IDs in den Cookie-Tabellen so, wie sie als Schlüssel gelten (`---Google Maps` → `---Google_Maps`).
+     */
+    public function hookBeforeConfigSave(HookEvent $event): void
+    {
+        $class = $event->arguments(0);
+        $name = $class instanceof Module ? $class->className() : (string) $class;
+        $data = $event->arguments(1);
+
+        if ($name !== $this->className() || !\is_array($data)) {
+            return;
+        }
+
+        $pattern = '/^(' . \implode('|', \array_keys(self::CATEGORY_CONSENT)) . ')_cookies(__\d+)?$/';
+
+        foreach ($data as $key => $value) {
+            if (!\is_string($value) || !\preg_match($pattern, (string) $key)) {
+                continue;
+            }
+
+            $data[$key] = (string) \preg_replace_callback(
+                '/^(\s*---)([^|\r\n]*)/m',
+                fn(array $match) => $match[1] . $this->normalizeServiceId($match[2], ''),
+                $value,
+            );
+        }
+
+        $event->arguments(1, $data);
     }
 
     public function hookConfigSaved(HookEvent $event): void
@@ -1009,6 +1069,7 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
         $this->addHook(self::REPORT_PATH, $this, 'handleReportRequest');
         $this->addHook('LazyCron::everyDay', $this, 'pruneReportLog');
         $this->addHook('LazyCron::everyDay', $this, 'pruneConsentLog');
+        $this->addHookBefore('Modules::saveConfig', $this, 'hookBeforeConfigSave');
         $this->addHookAfter('Modules::saveConfig', $this, 'hookConfigSaved');
         $this->addHookBefore('Page::renderPage', $this, 'hookBeforeRenderPage');
         $this->addHookAfter('TemplateFile::render', $this, 'hookTemplateFileRender');
@@ -1462,22 +1523,11 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
         $this->flatConsent = $consent === null ? [] : $this->applyGpc($this->flattenCookieStructure($consent), $consent);
         $this->consentedCategories = ['essential'];
 
-        $this->googleConsentStates = \array_fill_keys([
-            'ad_storage',
-            'ad_user_data',
-            'ad_personalization',
-            'analytics_storage',
-            'functionality_storage',
-            'personalization_storage',
-            'security_storage',
-        ], 'denied');
+        $this->googleConsentStates = $this->getGoogleConsentDefaults();
 
-        $this->grantGoogleConsent(self::CATEGORY_CONSENT['essential']);
-
-        foreach (self::CATEGORY_CONSENT as $key => $types) {
+        foreach (\array_keys(self::CATEGORY_CONSENT) as $key) {
             if ($key !== 'essential' && $this->isCategoryFullyConsented($key, $this->flatConsent)) {
                 $this->consentedCategories[] = $key;
-                $this->grantGoogleConsent($types);
             }
         }
 
@@ -1501,6 +1551,28 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
         }
 
         $this->allowTracking = $this->isCategoryFullyConsented('statistics', $this->flatConsent);
+
+        // Die Typen folgen der Zustimmung des Produkts – direkt eingebunden (ID) oder über den Tag Manager
+        $hasGtm = (bool) $this->get('gtm_id');
+
+        foreach (self::GOOGLE_CONSENT_PRODUCTS as $prefix => [$idField, $types]) {
+            $id = (string) $this->get($idField);
+
+            if (($id === '' && !$hasGtm) || !$this->isTagUnlocked($prefix)) {
+                continue;
+            }
+
+            // Ältere Konfigurationen tragen bei Google Analytics auch `AW-…`/`DC-…` ein
+            if ($prefix === 'ga' && \preg_match('/^(AW|DC)-/', $id)) {
+                $types = self::GOOGLE_CONSENT_PRODUCTS['google_ads'][1];
+            }
+
+            $this->grantGoogleConsent($types);
+
+            if ($prefix === 'google_ads' && $this->isAnyServiceUnlocked((array) $this->get('google_ads_remarketing'))) {
+                $this->grantGoogleConsent(['ad_personalization']);
+            }
+        }
     }
 
     /**
@@ -1558,15 +1630,54 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
     }
 
     /**
+     * Stand vor jeder Entscheidung: alles `denied`, nur die notwendigen Typen `granted`.
+     *
+     * @return array<string, string>
+     */
+    public function getGoogleConsentDefaults(): array
+    {
+        return \array_fill_keys(self::GOOGLE_CONSENT_TYPES, 'denied') + ['security_storage' => 'granted'];
+    }
+
+    /**
      * @param string[] $types
      */
     private function grantGoogleConsent(array $types): void
     {
-        foreach ($types as $type) {
-            if (isset($this->googleConsentStates[$type])) {
-                $this->googleConsentStates[$type] = 'granted';
+        $this->googleConsentStates = \array_replace($this->googleConsentStates, \array_fill_keys($types, 'granted'));
+    }
+
+    /**
+     * @param string[] $keys
+     */
+    private function isAnyServiceUnlocked(array $keys): bool
+    {
+        foreach ($this->normalizeServiceKeys($keys) as $key) {
+            // Kein Ersatz-Schlüssel: Ein entfernter Dienst darf nicht über seine Kategorie oder `all` freigeben
+            if ($this->resolveServiceKey($key) === $key && $this->isUnlocked($key)) {
+                return true;
             }
         }
+
+        return false;
+    }
+
+    /**
+     * Zustimmung je angebotenem Dienst, nach Kategorie gruppiert (für den dataLayer).
+     *
+     * @return array<string, array<string, string>> z.B. ['marketing' => ['meta' => 'granted']]
+     */
+    public function getServiceStates(): array
+    {
+        $states = [];
+
+        foreach ($this->getOfferedServices() as $category => $serviceIds) {
+            foreach ($serviceIds as $serviceId) {
+                $states[$category][$serviceId] = \in_array("{$category}-{$serviceId}", $this->consentedCategories, true) ? 'granted' : 'denied';
+            }
+        }
+
+        return $states;
     }
 
     /**
@@ -1810,6 +1921,7 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
             'once' => $this->getOnceKeys(),
             'tags' => $this->getActiveTagMethods(),
             'consentMode' => $this->getGoogleConsentStates(),
+            'dataLayer' => $this->getDataLayerState(),
             'message' => $message,
         ];
     }
@@ -2031,6 +2143,8 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
     {
         $tag = [
             'addGATrackingCode' => 'ga',
+            'addGoogleAdsTrackingCode' => 'ga',
+            'addFloodlightTrackingCode' => 'ga',
             'addGTMTrackingCode' => 'gtm',
             'addMatomoTrackingCode' => 'matomo',
         ][$method] ?? null;
@@ -3011,7 +3125,7 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
             $head .= $this->addGSVHeadCode();
         }
 
-        if ($this->get('gtm_id') || $this->get('ga_property_id')) {
+        if ($this->get('gtm_id') || $this->get('ga_property_id') || $this->get('google_ads_id') || $this->get('floodlight_id')) {
             $head .= $this->addConsentDefaultCode();
         }
 
@@ -3059,6 +3173,8 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 
         $tags = [
             'addGATrackingCode' => $this->get('ga_property_id') ? $this->isTagUnlocked('ga') : null,
+            'addGoogleAdsTrackingCode' => $this->get('google_ads_id') ? $this->isTagUnlocked('google_ads') : null,
+            'addFloodlightTrackingCode' => $this->get('floodlight_id') ? $this->isTagUnlocked('floodlight') : null,
             'addGTMTrackingCode' => $this->get('gtm_id') ? $this->isTagUnlocked('gtm') : null,
             'addLinkedInTrackingCode' => $this->get('linkedin_insight_id') ? $this->isTagUnlocked('linkedin_insight') : null,
             'addMatomoTrackingCode' => $this->get('matomo_enabled') ? $matomoCookieless || $this->isTagUnlocked('matomo') : null,
@@ -3359,12 +3475,36 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
         return $this->renderTag('ga', ['propertyId' => (string) $this->get('ga_property_id')], $noScript);
     }
 
+    public function addGoogleAdsTrackingCode(bool $noScript = false): string
+    {
+        return $this->renderTag('ga', ['propertyId' => (string) $this->get('google_ads_id')], $noScript);
+    }
+
+    public function addFloodlightTrackingCode(bool $noScript = false): string
+    {
+        return $this->renderTag('ga', ['propertyId' => (string) $this->get('floodlight_id')], $noScript);
+    }
+
     /**
      * Muss vor GTM/gtag stehen, damit alle Google-Tags den Consent-Zustand kennen.
      */
     public function addConsentDefaultCode(): string
     {
-        return $this->renderTag('consent', ['googleConsentStates' => $this->getGoogleConsentStates()]);
+        return $this->renderTag('consent', [
+            'defaultStates' => $this->getGoogleConsentDefaults(),
+            'updateStates' => $this->consent !== null ? $this->getGoogleConsentStates() : null,
+            'dataLayerState' => $this->getDataLayerState(),
+        ]);
+    }
+
+    /**
+     * @return array<string, mixed> `decided` und die Zustimmung je Dienst
+     */
+    private function getDataLayerState(): array
+    {
+        // Objekte: Numerische Dienst-IDs würden sonst zu einem JSON-Array
+        return ['decided' => $this->consent !== null && !$this->hasUndecidedServices()]
+            + \array_map(fn(array $services): object => (object) $services, $this->getServiceStates());
     }
 
     public function addGTMTrackingCode(bool $noScript = false): string
@@ -4498,6 +4638,12 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
                 if (!isset($options[$key])) {
                     $references[$key][] = $this->sanitizer->entities($label);
                 }
+            }
+        }
+
+        foreach ($this->normalizeServiceKeys((array) $this->get('google_ads_remarketing')) as $key) {
+            if (!isset($options[$key])) {
+                $references[$key][] = 'Google Ads: Remarketing';
             }
         }
 
