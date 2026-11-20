@@ -10,11 +10,14 @@ CookieMonster ist ein ProcessWire-Modul für Cookie-Einwilligung, Tracking und H
 
 Banner, Assets und Tracking-Codes landen automatisch in jeder vollständig gerenderten Seite. Template-Änderungen sind nicht nötig. Ausnahmen stehen unter [Bekannte Grenzen](#bekannte-grenzen).
 
+> [!TIP]
+> Fertige Zeilen für gängige Dienste (YouTube, Google Analytics, Matomo, Meta Pixel und mehr) zum Einfügen in **Dienste und Cookies**: [Cookie-Vorlagen](docs/cookie-vorlagen.md).
+
 ## Status und Voraussetzungen
 
 | Angabe      | Wert               |
 | ----------- | ------------------ |
-| Status      | Version 4.6.0      |
+| Status      | Version 4.7.0      |
 | PHP         | 8.2 oder neuer     |
 | ProcessWire | 3.0.229 oder neuer |
 
@@ -42,6 +45,7 @@ Einstieg: [Schnellstart](#schnellstart). Betrieb und Redaktion: [Aufgaben](#aufg
 - [Bekannte Grenzen](#bekannte-grenzen)
 - [Entwickler](#entwickler)
 - [Fehlersuche](#fehlersuche)
+- [Upgrade auf 4.7.0](#upgrade-auf-470)
 - [Upgrade auf 4.6.0](#upgrade-auf-460)
 
 ## Schnellstart
@@ -183,17 +187,17 @@ Beispiel: Die Zeilen der YouTube-Vorlage ergeben den Dienst `external-youtube`. 
 
 Vorlagen zum Kopieren (Link öffnet den aufklappbaren Block):
 
-| Kategorie       | Vorlagen                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Notwendig       | [ProcessWire](docs/cookie-vorlagen.md#vorlage-processwire), [Friendly Captcha](docs/cookie-vorlagen.md#vorlage-friendly-captcha), [Cloudflare Turnstile](docs/cookie-vorlagen.md#vorlage-cloudflare-turnstile-mit-pre-clearance), [Eye-Able](docs/cookie-vorlagen.md#vorlage-eye-able)                                                                                                                                                                                                                                                                                                    |
-| Funktionell     | [Google reCAPTCHA](docs/cookie-vorlagen.md#vorlage-google-recaptcha)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| Statistik       | [Matomo](docs/cookie-vorlagen.md#vorlage-matomo), [Google Analytics 4](docs/cookie-vorlagen.md#vorlage-google-analytics-4), [Google Tag Manager](docs/cookie-vorlagen.md#vorlage-google-tag-manager-statistik), [Microsoft Clarity](docs/cookie-vorlagen.md#vorlage-microsoft-clarity)                                                                                                                                                                                                                                                                                                    |
-| Marketing       | [Google Tag Manager / Google Ads](docs/cookie-vorlagen.md#vorlage-google-tag-manager-marketing-google-ads), [Meta Pixel](docs/cookie-vorlagen.md#vorlage-meta-pixel-facebook-instagram), [LinkedIn Insight Tag](docs/cookie-vorlagen.md#vorlage-linkedin-insight-tag), [TikTok Pixel](docs/cookie-vorlagen.md#vorlage-tiktok-pixel), [Microsoft Advertising UET](docs/cookie-vorlagen.md#vorlage-microsoft-advertising-uet-bing-copilot), [ChatGPT Ads Pixel](docs/cookie-vorlagen.md#vorlage-chatgpt-ads-pixel-openai), [Snapchat Pixel](docs/cookie-vorlagen.md#vorlage-snapchat-pixel) |
-| Externe Inhalte | [YouTube](docs/cookie-vorlagen.md#vorlage-youtube), [Vimeo](docs/cookie-vorlagen.md#vorlage-vimeo), [Google Maps](docs/cookie-vorlagen.md#vorlage-google-maps), [OpenStreetMap](docs/cookie-vorlagen.md#vorlage-openstreetmap), [Instagram](docs/cookie-vorlagen.md#vorlage-instagram), [Facebook](docs/cookie-vorlagen.md#vorlage-facebook), [X](docs/cookie-vorlagen.md#vorlage-x-twitter), [Calendly](docs/cookie-vorlagen.md#vorlage-calendly), [Google Fonts](docs/cookie-vorlagen.md#vorlage-google-fonts) (nur Hinweis)                                                            |
+| Kategorie       | Vorlagen                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Notwendig       | [ProcessWire](docs/cookie-vorlagen.md#vorlage-processwire), [Friendly Captcha](docs/cookie-vorlagen.md#vorlage-friendly-captcha), [Cloudflare Turnstile](docs/cookie-vorlagen.md#vorlage-cloudflare-turnstile-mit-pre-clearance), [Eye-Able](docs/cookie-vorlagen.md#vorlage-eye-able)                                                                                                                                                                                                                                                                                |
+| Funktionell     | [Google reCAPTCHA](docs/cookie-vorlagen.md#vorlage-google-recaptcha)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| Statistik       | [Matomo](docs/cookie-vorlagen.md#vorlage-matomo), [Google Analytics 4](docs/cookie-vorlagen.md#vorlage-google-analytics-4), [Google Analytics 4 (über Google Tag Manager)](docs/cookie-vorlagen.md#vorlage-google-analytics-4-gtm), [Microsoft Clarity](docs/cookie-vorlagen.md#vorlage-microsoft-clarity)                                                                                                                                                                                                                                                            |
+| Marketing       | [Google Ads (über Google Tag Manager)](docs/cookie-vorlagen.md#vorlage-google-ads-gtm), [Meta Pixel](docs/cookie-vorlagen.md#vorlage-meta-pixel-facebook-instagram), [LinkedIn Insight Tag](docs/cookie-vorlagen.md#vorlage-linkedin-insight-tag), [TikTok Pixel](docs/cookie-vorlagen.md#vorlage-tiktok-pixel), [Microsoft Advertising UET](docs/cookie-vorlagen.md#vorlage-microsoft-advertising-uet-bing-copilot), [ChatGPT Ads Pixel](docs/cookie-vorlagen.md#vorlage-chatgpt-ads-pixel-openai), [Snapchat Pixel](docs/cookie-vorlagen.md#vorlage-snapchat-pixel) |
+| Externe Inhalte | [YouTube](docs/cookie-vorlagen.md#vorlage-youtube), [Vimeo](docs/cookie-vorlagen.md#vorlage-vimeo), [Google Maps](docs/cookie-vorlagen.md#vorlage-google-maps), [OpenStreetMap](docs/cookie-vorlagen.md#vorlage-openstreetmap), [Instagram](docs/cookie-vorlagen.md#vorlage-instagram), [Facebook](docs/cookie-vorlagen.md#vorlage-facebook), [X](docs/cookie-vorlagen.md#vorlage-x-twitter), [Calendly](docs/cookie-vorlagen.md#vorlage-calendly), [Google Fonts](docs/cookie-vorlagen.md#vorlage-google-fonts) (nur Hinweis)                                        |
 
 Regeln für Dienst-IDs:
 
-- Die ID wird auf `A-Z`, `a-z`, `0-9`, `_` und `-` reduziert. Andere Zeichen werden zu `_`. Beispiel: `google.maps` wird zu `external-google_maps`.
+- Die ID wird auf `A-Z`, `a-z`, `0-9`, `_` und `-` reduziert. Andere Zeichen werden zu `_`, beim Speichern auch im Text. Beispiel: `google maps` wird zu `google_maps` (Schlüssel `external-google_maps`).
 - Notwendige Dienste (`essential-…`) sind immer freigeschaltet.
 - Ein Kategorie-Präfix wird nur am Anfang entfernt.
 - Eine Zeile ohne ID (`---|Titel`) erhält die ID aus dem Titel (`Google Maps` wird zu `google-maps`). Ohne Titel gehört sie zu `default`. Ändert sich der Titel, ändert sich die ID.
@@ -226,7 +230,7 @@ Banner, `[[cookie-table]]` und `[[cookie-list]]` zeigen Dauer und Typ aus der le
 
 - UND: Die Maske nennt nur die fehlenden Einträge, „Zulassen“ stimmt allen zu. Eine gewählte Kategorie deckt ihre Dienste ab (`external` + `external-youtube` = `external`).
 - ODER: Der Pseudo-Schlüssel `any` (`CookieMonster::MATCH_ANY`) steht im Wert, z. B. `['any', 'statistics-gtm', 'marketing-gtm']`. `isUnlocked()` und `maskContent()` erkennen ihn, der Wert kann direkt übergeben werden. Die Maske nennt die Einträge mit „oder“ und verschwindet, sobald einem zugestimmt wurde.
-- Auswahl in der Oberfläche: Unter der Mehrfachauswahl steht **Bei mehreren Einträgen:** mit „UND: Allen muss zugestimmt sein“ und „ODER: Mindestens einem muss zugestimmt sein“. In eigenen Formularen erscheint sie mit `'showMatch' => true`.
+- Auswahl in der Oberfläche: Unter der Mehrfachauswahl steht in einer Zeile **Zustimmung nötig zu:** „allen (UND)“ oder „mindestens einem (ODER)“. In eigenen Formularen erscheint sie mit `'showMatch' => true`.
 
 ## Aufgaben
 
@@ -238,13 +242,13 @@ Rechtliche Entscheidungen (Protokollierung, Aufbewahrung, Matomo-Modus, Rechtsgr
 
 Die Konfiguration liegt unter **Modules** → **Site** → **CookieMonster** (Texte mehrsprachig, Bereiche mit aktiver Einstellung aufgeklappt).
 
-| Tab                    | Bereiche                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Tab                    | Bereiche                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | **Cookie-Banner**      | **Anzeige** (Banner an/aus, Standard-Stylesheet, unter **Erweitert** Template-Cache beibehalten, Ohne Neuladen freischalten und Fehlendes Dienst-Feld), **Texte** (Hinweistext, Überschriften, Erklärung im ersten Abschnitt, vier Buttons), **Rechtliche Seiten**, **Inhaltsmaske für blockierte Inhalte** (Hinweistext mit `{category}`, Buttons „Zulassen“, „Einmal laden“, „Alle akzeptieren (Maske)“, Text vor dem Link zur Datenschutzerklärung) |
-| **Cookies**            | **Kategorien** (fünf Abschnitte mit Titel, Beschreibung, **Dienste und Cookies**; ausgeschaltete abgeblendet), **Datenschutz-Signale des Browsers (GPC / DNT)**, **Consent-Cookie** (**Consent über Subdomains teilen**)                                                                                                                                                                                                   |
-| **Tracking**           | **Google Analytics**, **Google Tag Manager**, **Matomo**, **Meta Pixel**, **LinkedIn Insight Tag**, **Microsoft Advertising UET**, **ChatGPT Ads Pixel** (je mit **Erforderliche Zustimmung**), **Google Search Console** (Meta-Tag `google-site-verification`, unabhängig von der Zustimmung)                                                                                                                             |
-| **Sicherheits-Header** | **HSTS**, **Einbetten in Frames**, **Content Security Policy (CSP)**, **Permissions-Policy**, **Weitere Sicherheits-Header** ([Security-Header](#security-header))                                                                                                                                                                                                                                                         |
-| **Statistik**          | **Aufbewahrung des Einwilligungsprotokolls**, **Consent-Statistik**, **Verlauf der Konfiguration** ([Rechtliche Grenzen und Verantwortung](#rechtliche-grenzen-und-verantwortung))                                                                                                                                                                                                                                         |
+| **Cookies**            | **Kategorien** (fünf Abschnitte mit Titel, Beschreibung, **Dienste und Cookies**; ausgeschaltete abgeblendet), **Datenschutz-Signale des Browsers (GPC / DNT)**, **Consent-Cookie** (**Consent über Subdomains teilen**)                                                                                                                                                                                                                               |
+| **Tracking**           | **Google Search Console**, **Google Tag Manager**, **Google-Dienste** (Analytics, Ads, Floodlight), **Matomo**, **Meta Pixel**, **LinkedIn Insight Tag**, **Microsoft Advertising UET**, **ChatGPT Ads Pixel** (je mit **Erforderliche Zustimmung**; Search Console nur Meta-Tag, unabhängig von der Zustimmung)                                                                                                                                       |
+| **Sicherheits-Header** | **HSTS**, **Einbetten in Frames**, **Content Security Policy (CSP)**, **Permissions-Policy**, **Weitere Sicherheits-Header** ([Security-Header](#security-header))                                                                                                                                                                                                                                                                                     |
+| **Statistik**          | **Aufbewahrung des Einwilligungsprotokolls**, **Consent-Statistik**, **Verlauf der Konfiguration** ([Rechtliche Grenzen und Verantwortung](#rechtliche-grenzen-und-verantwortung))                                                                                                                                                                                                                                                                     |
 
 ### Welche Cookies setzt meine Seite?
 
@@ -341,10 +345,10 @@ Google Tag Manager: `gtag('set', …)` gilt laut [Google](https://developers.goo
 
 Mit **Cookie-Banner → Anzeige → Erweitert → Ohne Neuladen freischalten** lädt das Modul zusätzlich `CookieMonster.live.js`, sendet die Entscheidung per `fetch()` und lädt die Seite nicht neu. Gesperrte Tracking-Codes und maskierte Inhalte stehen dafür inert in `<template>`-Elementen im Quelltext. Nach der Zustimmung:
 
-1. `gtag('consent', 'update', …)` mit dem neuen Zustand (wenn Google Analytics oder Tag Manager eingerichtet ist).
+1. `gtag('consent', 'update', …)` mit dem neuen Zustand, danach `cmnstr` und das Event `cmnstr_consent` im dataLayer (wenn Google Analytics oder Tag Manager eingerichtet ist, [Google Consent Mode](#google-consent-mode)).
 2. Freigegebene Masken werden durch ihren Inhalt ersetzt, der Fokus wandert von der Maske zum Inhalt.
 3. Freigegebene Tracking-Codes laufen. Scripts werden neu erzeugt (mit Nonce), externe Scripts ohne `async` laden nacheinander wie beim Parser.
-4. `document` erhält das Event `cmnstr:consent` mit dem neuen Zustand in `event.detail` (`unlocked`, `once`, `tags`, `consentMode`).
+4. `document` erhält das Event `cmnstr:consent` mit dem neuen Zustand in `event.detail` (`unlocked`, `once`, `tags`, `consentMode`, `dataLayer`).
 
 Da die Seite nicht neu lädt, bleibt `document.referrer` erhalten; die Übergabe aus dem vorigen Abschnitt entfällt.
 
@@ -366,43 +370,107 @@ Rolle: Betrieb.
 
 1. Im Tab **Cookies** die Kategorie **Statistik-Cookies** aufklappen und **Kategorie im Cookie-Banner anbieten** anhaken.
 2. Die [Vorlage für Google Analytics 4](docs/cookie-vorlagen.md#vorlage-google-analytics-4) in **Dienste und Cookies** einfügen und `beispiel.de` ersetzen. Die Zeile `---ga|Google Analytics|…` muss dabei sein, sonst gibt es nichts zum Zustimmen und der Tag lädt nie.
-3. Im Tab **Tracking** im Bereich **Google Analytics** die **Mess-ID** eintragen (`G-XXXXXXXXXX`). Andere gtag.js-IDs wie `AW-…` (Google Ads) und `DC-…` (Floodlight) funktionieren ebenfalls.
-4. Bei **Erforderliche Zustimmung** den Dienst `statistics-ga` wählen. Bleibt die Auswahl leer, wartet der Code auf alle Dienste der Statistik-Cookies.
-5. Speichern und im Browser prüfen: Ohne Zustimmung lädt kein Script von Google und es gibt kein Cookie `_ga`. Nach „Alle akzeptieren“ lädt der Tag.
+3. Im Tab **Tracking** → **Google-Dienste** → **Google Analytics** die **Mess-ID** eintragen (`G-XXXXXXXXXX`). Google Ads (`AW-…`) und Floodlight (`DC-…`) haben eigene Bereiche mit gleichem Aufbau.
+4. Bei **Erforderliche Zustimmung** den Dienst `statistics-ga` wählen. Bleibt die Auswahl leer, wartet der Code auf alle Dienste der Statistik-Cookies. Nach dieser Zustimmung meldet das Modul Google auch `analytics_storage` = `granted` ([Google Consent Mode](#google-consent-mode)).
+5. Speichern und im Browser prüfen: Ohne Zustimmung lädt kein Script von Google und es gibt kein Cookie `_ga`. Nach „Alle akzeptieren“ lädt der Tag und setzt `_ga`.
 
-Wird GA4 über den Tag Manager geladen, nur die GTM-Vorlage eintragen, nicht zusätzlich die GA4-Vorlage.
+Wird GA4 über den Tag Manager geladen, die Mess-ID hier leer lassen und die Vorlage [Google Analytics 4 (über Google Tag Manager)](docs/cookie-vorlagen.md#vorlage-google-analytics-4-gtm) verwenden ([Google Tag Manager anbinden](#google-tag-manager-anbinden)).
 
 Probleme: [Tracking-Code lädt nicht](#tracking-code-lädt-nicht).
 
 ### Google Tag Manager anbinden
 
-Rolle: Betrieb.
+Rolle: Betrieb (Modul) und Tracking (Container).
 
-Der Tag Manager darf in Statistik und Marketing auftreten. Mit ODER lädt der Container, sobald einer der beiden zugestimmt wurde. Bei Unsicherheit stattdessen [Google Analytics anbinden](#google-analytics-anbinden).
+Der Tag Manager ist nur ein Lader und bekommt keinen eigenen Dienst im Banner. Im Banner stehen die Dienste, deren Tags im Container laufen (z. B. Google Analytics, Google Ads, Meta Pixel). Der Container lädt, sobald einem davon zugestimmt wurde. Welche Tags dann feuern, entscheidet der Container anhand des [Consent-Status im dataLayer](#consent-status-im-datalayer). Betreut niemand den Container oder ist unklar, welche Tags darin laufen: stattdessen [Google Analytics anbinden](#google-analytics-anbinden).
 
-> [!WARNING]
-> Ein Consent-Typ wird erst `granted`, wenn allen Diensten der Kategorie zugestimmt wurde. Bietet eine Kategorie außer dem Tag Manager weitere Dienste an (z. B. `meta` in „Marketing“), bleibt `ad_storage` bei Zustimmung nur zum Tag Manager auf `denied`.
+> [!IMPORTANT]
+> Schon das Laden des Tag Managers braucht eine Einwilligung (VG Hannover, Urteil vom 19.03.2025, Az. 10 A 5385/22, § 25 TDDDG). Weil er keinen eigenen Eintrag hat, muss die Beschreibung jedes Dienstes, der über ihn lädt, ihn nennen: Google als Anbieter, Übertragung der IP-Adresse, auch in die USA. Die [Vorlagen für den Tag Manager](docs/cookie-vorlagen.md#über-den-google-tag-manager) enthalten den Satz, die Datenschutzerklärung muss ihn ebenfalls nennen. Ob diese Information genügt, entscheiden die Datenschutzbeauftragten.
 
-1. In **Statistik-Cookies** die [Vorlage Google Tag Manager (Statistik)](docs/cookie-vorlagen.md#vorlage-google-tag-manager-statistik) und in **Marketing-Cookies** die [Vorlage Google Tag Manager (Marketing)](docs/cookie-vorlagen.md#vorlage-google-tag-manager-marketing-google-ads) einfügen. Jede enthält eine Zeile `---gtm|Google Tag Manager|…`.
-2. Im Tab **Tracking** im Bereich **Google Tag Manager** die **Container-ID** (`GTM-…`) eintragen.
-3. Bei **Erforderliche Zustimmung** `statistics-gtm` und `marketing-gtm` auswählen und unter der Auswahl **ODER** wählen. Mit UND lädt der Container erst bei beiden Zustimmungen.
-4. Welche Tags im Container feuern, regelt der Google Consent Mode v2 (siehe unten).
+Im Modul:
 
-Google Consent Mode: Auf jeder Seite mit Google Analytics oder Tag Manager gibt das Modul vor dem Tracking-Code `gtag('consent', 'default', …)` mit dem Zustand des Besuchers aus (`templates/tags/consent.php`).
+1. Für jedes Tag im Container einen Dienst anlegen, z. B. mit den Vorlagen [Google Analytics 4 (über Google Tag Manager)](docs/cookie-vorlagen.md#vorlage-google-analytics-4-gtm) in **Statistik-Cookies** (`statistics-ga`), [Google Ads (über Google Tag Manager)](docs/cookie-vorlagen.md#vorlage-google-ads-gtm) und [Meta Pixel](docs/cookie-vorlagen.md#vorlage-meta-pixel-facebook-instagram) (Satz zum Tag Manager an die Beschreibung anhängen) in **Marketing-Cookies** (`marketing-googleads`, `marketing-meta`).
+2. Im Tab **Tracking** → **Google Tag Manager** die **Container-ID** (`GTM-…`) eintragen.
+3. Bei **Erforderliche Zustimmung** alle Dienste aus Schritt 1 wählen und unter der Auswahl **ODER**. Mit UND lädt der Container erst, wenn allen zugestimmt wurde.
+4. Unter **Google-Dienste** die ID-Felder leer lassen und je Produkt die **Erforderliche Zustimmung** wählen: `statistics-ga` bei **Google Analytics**, `marketing-googleads` bei **Google Ads**, nirgends `marketing-meta` ([Google Consent Mode](#google-consent-mode)).
 
-| Kategorie (vollständig zugestimmt) | Consent-Typ `granted`                              |
-| ---------------------------------- | -------------------------------------------------- |
-| Notwendige Cookies (immer)         | `security_storage`                                 |
-| Funktionelle Cookies               | `functionality_storage`, `personalization_storage` |
-| Statistik-Cookies                  | `analytics_storage`                                |
-| Marketing-Cookies                  | `ad_storage`, `ad_user_data`, `ad_personalization` |
-| Externe Inhalte                    | `personalization_storage`                          |
+Im Container (Tracking-Verantwortliche, diesen Teil weitergeben):
 
-Alles andere steht auf `denied`. Lädt der Container nur wegen der Marketing-Zustimmung, bleiben GA4-Tags ohne Cookies (`analytics_storage` = `denied`), Google-Ads-Tags laufen.
+1. Je Dienst eine Variable anlegen: Typ **Datenschichtvariable**, Version 2, Name `cmnstr.<kategorie>.<dienst>`, z. B. `cmnstr.statistics.ga`. Kategorien: `essential`, `functional`, `statistics`, `marketing`, `external`.
+2. **Jedes** Tag an seinen Dienst binden, auch Google-Tags (Google-Tag/GA4, Google Ads, Conversion Linker, Floodlight). Bedingung immer `gleich granted`, nie `ungleich denied`: Ein entfernter Dienst fehlt im dataLayer.
 
-- Nicht-Google-Tags (z. B. Microsoft Clarity, Meta Pixel über GTM) werten den Consent Mode nicht aus. In GTM unter _Erweiterte Einstellungen → Einwilligungseinstellungen → Zusätzliche Einwilligung erforderlich_ den passenden Typ (z. B. `analytics_storage`) eintragen, sonst feuern sie, sobald der Container lädt. Google-Tags (GA4, Google Ads, Conversion Linker) prüfen selbst.
-- `default` setzt den Zustand bei jedem Seitenaufruf serverseitig. Ein `update` folgt nur mit [Ohne Neuladen freischalten](#ohne-neuladen-freischalten), sonst lädt die Seite nach der Entscheidung neu.
-- Cookies im Container: Die Cookie-Zeilen hängen von den Tags im Container ab. Nur eintragen, was gesetzt wird, damit Banner und Löschen ohne Zustimmung stimmen.
+| Tag                                                | Trigger                                                                                                                                     |
+| -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| Läuft beim Seitenaufruf (Google-Tag, Meta Pixel …) | **Benutzerdefiniertes Ereignis** `cmnstr_consent` mit Bedingung `cmnstr.statistics.ga` gleich `granted`, Tag-Auslösung **Einmal pro Seite** |
+| Läuft bei einem Ereignis (Klick, Formular, Kauf)   | Kopie des bisherigen Triggers plus dieselbe Bedingung (geteilte Trigger nicht ändern, sie gelten auch für andere Tags)                      |
+
+Warum: Der Container lädt, sobald einem seiner Dienste zugestimmt wurde, etwa nur dem Meta Pixel. Ein Google-Tag ohne Bedingung sendet dann bei `denied` cookielose Pings an Google, ein Nicht-Google-Tag feuert normal. `cmnstr_consent` statt _Initialization – All Pages_: Das Event kommt bei jedem Seitenaufruf und noch einmal nach einer Entscheidung [ohne Neuladen](#ohne-neuladen-freischalten), nur so feuert ein Tag, dessen Dienst erst nach dem Laden des Containers freigegeben wird. **Einmal pro Seite** verhindert eine doppelte Auslösung. Ohne „Ohne Neuladen freischalten“ funktioniert _Initialization – All Pages_ mit derselben Bedingung ebenso.
+
+- Ein Google-Tag mit mehreren Zielen (`G-…` und `AW-…`) hat nur eine Bedingung: GA4 und Google Ads in getrennte Tags legen.
+- Die eingebauten Consent-Prüfungen der Google-Tags (GA4 `analytics_storage`, Google Ads `ad_storage` und `ad_user_data`, Remarketing zusätzlich `ad_personalization`) bleiben aktiv und passen zu den Werten des Moduls.
+- Nicht-Google-Tags (z. B. Meta Pixel) nicht zusätzlich an `ad_storage` binden, weder über _Zusätzliche Einwilligung erforderlich_ noch über eine eingebaute Prüfung des Vorlagen-Tags: `ad_storage` folgt nur den Google-Diensten, das Tag feuerte bei Zustimmung nur zu Meta nie.
+- Nicht-Google-Dienste besser über das Modul laden statt im Container (z. B. Meta Pixel, LinkedIn, UET unter **Tracking**): Dann führt der Container nur Google-Dienste, und wer nur Meta zustimmt, lädt nichts von Google.
+- Enhanced Conversions brauchen `ad_user_data`, also Zustimmung zu Google Ads. Die Übermittlung gehashter Kundendaten gehört in Dienstbeschreibung und Datenschutzerklärung.
+- Primäre Conversions als Google-Ads-Conversion-Tag messen (an Google Ads gebunden), nicht als Import aus GA4: Importierte GA4-Conversions brauchen `ad_*` und fehlen bei Zustimmung nur zur Statistik.
+
+3. In der Vorschau (Tag Assistant) prüfen. Vor der Entscheidung ist der Container nicht geladen, der Tag Assistant verbindet sich erst nach einer Zustimmung; für jeden Fall ein neues privates Fenster nehmen.
+    - Vor der Entscheidung und nach „Alle ablehnen“: keine Requests an `googletagmanager.com`, Google oder Meta (Netzwerk-Tab der Entwicklertools).
+    - Nach Zustimmung nur zu Meta: Der Container lädt, nur das Meta-Tag feuert, im Tab **Consent** stehen alle Typen auf `denied` (außer `security_storage`).
+    - Nach Zustimmung zu Google Analytics: Im Tab **Consent** steht `analytics_storage` unter **On-page Default** auf `denied` und unter **On-page Update** auf `granted`.
+    - Im Tab **Variables** stehen die `cmnstr.*`-Werte wie erwartet.
+    - In der Tag-Liste hat kein Tag einen Trigger ohne `cmnstr`-Bedingung.
+
+Cookies im Container: Die Cookie-Zeilen gehören zu den Diensten der Tags. Nur eintragen, was gesetzt wird, damit Banner und Löschen ohne Zustimmung stimmen.
+
+#### Google Consent Mode
+
+Auf jeder Seite mit Google Analytics oder Tag Manager gibt das Modul vor dem Tracking-Code aus (`templates/tags/consent.php`):
+
+```js
+gtag("consent", "default", { ad_storage: "denied", /* … */ security_storage: "granted" });
+gtag("set", "ads_data_redaction", true);
+gtag("consent", "update", { analytics_storage: "granted", /* … */ }); // nur nach einer Entscheidung
+dataLayer.push({ cmnstr: { decided: true, statistics: { ga: "granted" } /* … */ } });
+dataLayer.push({ event: "cmnstr_consent" });
+```
+
+`default` steht immer auf `denied`, `update` liefert den gespeicherten Zustand des Besuchers (Muster laut [Google](https://developers.google.com/tag-platform/security/guides/consent)). Welche Typen eine Zustimmung auf `granted` setzt:
+
+Jedes Produkt unter **Google-Dienste** gibt seine Typen nach seiner **Erforderlichen Zustimmung** frei: mit ID (direkt eingebunden) oder ohne ID bei eingetragener GTM-ID (Tag im Container). Leer gilt die Kategorie wie bei den Tags.
+
+| Produkt / Feld                             | setzt `granted`                 |
+| ------------------------------------------ | ------------------------------- |
+| Google Analytics                           | `analytics_storage`             |
+| Google Ads: Conversion-Messung, Floodlight | `ad_storage`, `ad_user_data`    |
+| Google Ads: Remarketing                    | zusätzlich `ad_personalization` |
+
+`security_storage` ist immer `granted`, `functionality_storage` und `personalization_storage` bleiben `denied`: Google Analytics und Google Ads lesen sie nicht ([Google](https://developers.google.com/tag-platform/security/concepts/consent-mode)). Eigene Tags im Container binden an den [Consent-Status im dataLayer](#consent-status-im-datalayer).
+
+- Bei Google-Produkten nur Google-Dienste wählen. Die Zustimmung zum Meta Pixel darf keine Google-Werbung freigeben.
+- Ist eine ganze Kategorie gewählt (z. B. `marketing`), gilt sie erst, wenn allen ihren Diensten zugestimmt wurde. Ein entfernter Dienst gibt nichts frei.
+- Remarketing getrennt abfragen (Messung ja, Remarketing nein): einen eigenen Dienst „Google Ads Remarketing“ anlegen und unter **Remarketing** wählen, den Messdienst unter **Erforderliche Zustimmung**. Remarketing setzt die Zustimmung zur Messung voraus.
+- Werbefunktionen in GA4 (z. B. Google Signals, Remarketing-Zielgruppen, in Google Ads importierte GA4-Conversions) brauchen `ad_*` und sind bei Besuchern, die nur der Statistik zugestimmt haben, eingeschränkt oder fehlen.
+- `ads_data_redaction` entfernt Werbe-Kennungen aus Requests, solange `ad_storage` auf `denied` steht.
+- Basic Consent Mode: Das Modul lädt Google-Code erst nach einer Zustimmung, den Container erst, wenn einem seiner Dienste zugestimmt wurde. Folge: Ohne Zustimmung erhält Google nichts; nach Zustimmung nur zu einem Nicht-Google-Dienst im Container lädt `gtm.js` von Google, die Google-Tags feuern nicht. Google Ads modelliert fehlende Conversions im Basic Mode nur mit einem allgemeinen Modell ([Google Ads](https://support.google.com/google-ads/answer/10000067)), die Verhaltensmodellierung in GA4 setzt den Advanced Mode voraus ([Google Analytics](https://support.google.com/analytics/answer/11161109)). Besucher ohne Zustimmung fehlen also weitgehend in den Berichten. Den Advanced Mode (cookielose Pings ohne Zustimmung) unterstützt das Modul bewusst nicht. Im Container hängt das an den Bedingungen oben.
+- Klick-IDs (`gclid`, `gbraid`, `wbraid`) stehen nur in der Landing-URL. Stimmt der Besucher erst auf einer Folgeseite zu, kann der Google-Ads-Tag sie nicht mehr lesen; `url_passthrough` hilft im Basic Mode nicht. Den Banner deshalb nicht verzögern.
+- Mit [Ohne Neuladen freischalten](#ohne-neuladen-freischalten) folgen `update`, Zustand und Event nach der Entscheidung ohne Neuladen.
+- **Einmal laden** (Inhalt nur für diesen Seitenaufruf freigeben) ändert weder Consent Mode noch dataLayer: Der Dienst bleibt `denied`, ein so geladenes Google-Tag setzt keine Cookies.
+
+#### Consent-Status im dataLayer
+
+`cmnstr` enthält jeden angebotenen Dienst mit `granted` oder `denied`, gruppiert nach Kategorie. `decided` ist `false`, solange der Besucher nicht entschieden hat (alle Dienste `denied`) oder ein neuer Dienst noch offen ist (dieser `denied`). Das Event `cmnstr_consent` kommt auch dann.
+
+```js
+{
+	cmnstr: {
+		decided: true,
+		statistics: { ga: "granted", matomo: "denied" },
+		marketing: { googleads: "denied", meta: "granted" },
+	},
+}
+```
+
+„Einmal laden“ ([Einmal laden](#einmal-laden)) fehlt hier, GPC ist berücksichtigt. Der Zustand steht ohne `event` im dataLayer. GTM übernimmt ihn in sein Datenmodell, damit ist die Variable in jedem späteren Trigger lesbar.
 
 Probleme: [Tracking-Code lädt nicht](#tracking-code-lädt-nicht).
 
@@ -584,20 +652,20 @@ Zur rechtlichen Prüfung siehe [Rechtliche Grenzen und Verantwortung](#rechtlich
 
 Rolle: Betrieb. Die Tabelle nennt je Einstellung Standard, Empfehlung und Handlungsbedarf. Die rechtliche Einordnung bleibt Sache des Betreibers.
 
-| Einstellung                                  | Standard                               | Übernehmen?                                                                                                                                                         | Aufgabe                                                |
-| -------------------------------------------- | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
-| **Cookieloses Tracking** (Matomo)            | Aus, Matomo lädt nur mit Zustimmung    | Ja, solange die Datenschutzberatung den cookielosen Betrieb nicht freigegeben hat                                                                                   | Nur bei Matomo: Modus festlegen                        |
-| **Bei mehreren Einträgen:**                  | UND                                    | Ja. ODER nur bei einem Dienst in mehreren Kategorien, z. B. Tag Manager                                                                                             | Nur beim Tag Manager in zwei Kategorien                |
-| **Aufbewahrung des Einwilligungsprotokolls** | 3 Jahre nach Ablauf der Einwilligung   | Betreiber entscheidet, das Gesetz nennt keinen Wert. Begründen und im Verzeichnis der Verarbeitungstätigkeiten festhalten                                           | Ja: Frist festlegen und dokumentieren                  |
-| **Global Privacy Control (GPC)**             | Aus                                    | Freiwillig. Eingeschaltet gilt Marketing als abgelehnt ([Browser-Signale](#browser-signale-gpc-und-dnt))                                                            | Nein                                                   |
-| **Do Not Track (DNT)**                       | Aus                                    | Ja, DNT ist veraltet und überstimmt nichts                                                                                                                          | Nein                                                   |
-| **CSP-Header senden**                        | Aus (danach Report-Only)               | Erst im Report-Only-Modus prüfen, dann durchsetzen ([Security-Header](#security-header))                                                                            | Nur mit Entwicklung einschalten                        |
-| **HSTS-Header senden**                       | Aus                                    | Erst, wenn Website und Subdomains dauerhaft per HTTPS laufen                                                                                                        | Nur mit Entwicklung einschalten                        |
-| **Einbetten erlauben**                       | Nur auf dieser Website                 | Ja, außer andere Websites sollen die Seiten einbetten                                                                                                               | Nein                                                   |
-| **Template-Cache beibehalten**               | Aus                                    | Ja ([Bekannte Grenzen](#bekannte-grenzen))                                                                                                                          | Nein                                                   |
+| Einstellung                                  | Standard                               | Übernehmen?                                                                                                                                                                | Aufgabe                                                |
+| -------------------------------------------- | -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| **Cookieloses Tracking** (Matomo)            | Aus, Matomo lädt nur mit Zustimmung    | Ja, solange die Datenschutzberatung den cookielosen Betrieb nicht freigegeben hat                                                                                          | Nur bei Matomo: Modus festlegen                        |
+| **Zustimmung nötig zu:**                     | UND                                    | Ja. ODER nur bei einem Dienst in mehreren Kategorien, z. B. Tag Manager                                                                                                    | Nur beim Tag Manager in zwei Kategorien                |
+| **Aufbewahrung des Einwilligungsprotokolls** | 3 Jahre nach Ablauf der Einwilligung   | Betreiber entscheidet, das Gesetz nennt keinen Wert. Begründen und im Verzeichnis der Verarbeitungstätigkeiten festhalten                                                  | Ja: Frist festlegen und dokumentieren                  |
+| **Global Privacy Control (GPC)**             | Aus                                    | Freiwillig. Eingeschaltet gilt Marketing als abgelehnt ([Browser-Signale](#browser-signale-gpc-und-dnt))                                                                   | Nein                                                   |
+| **Do Not Track (DNT)**                       | Aus                                    | Ja, DNT ist veraltet und überstimmt nichts                                                                                                                                 | Nein                                                   |
+| **CSP-Header senden**                        | Aus (danach Report-Only)               | Erst im Report-Only-Modus prüfen, dann durchsetzen ([Security-Header](#security-header))                                                                                   | Nur mit Entwicklung einschalten                        |
+| **HSTS-Header senden**                       | Aus                                    | Erst, wenn Website und Subdomains dauerhaft per HTTPS laufen                                                                                                               | Nur mit Entwicklung einschalten                        |
+| **Einbetten erlauben**                       | Nur auf dieser Website                 | Ja, außer andere Websites sollen die Seiten einbetten                                                                                                                      | Nein                                                   |
+| **Template-Cache beibehalten**               | Aus                                    | Ja ([Bekannte Grenzen](#bekannte-grenzen))                                                                                                                                 | Nein                                                   |
 | **Ohne Neuladen freischalten**               | Aus                                    | Einschalten, wenn die Herkunft (Referrer) in der Statistik wichtig ist oder Masken ohne Neuladen öffnen sollen ([Ohne Neuladen freischalten](#ohne-neuladen-freischalten)) | Im Browser prüfen (Abnahmeprotokoll)                   |
-| **Fehlendes Dienst-Feld**                    | Inhalt anzeigen                        | Maskieren ist sicherer, sobald alle Templates `cmnstr_service` nutzen ([Entfernte Dienste und fehlendes Dienst-Feld](#entfernte-dienste-und-fehlendes-dienst-feld)) | Prüfen, ob alle Templates das Feld nutzen              |
-| Sessions für Erstbesucher                    | ProcessWire startet immer eine Session | Ja, solange kein Bedarf besteht ([Sessions ohne Cookie für Erstbesucher](#sessions-ohne-cookie-für-erstbesucher))                                                   | Nein, das Session-Cookie steht in der Cookie-Übersicht |
+| **Fehlendes Dienst-Feld**                    | Inhalt anzeigen                        | Maskieren ist sicherer, sobald alle Templates `cmnstr_service` nutzen ([Entfernte Dienste und fehlendes Dienst-Feld](#entfernte-dienste-und-fehlendes-dienst-feld))        | Prüfen, ob alle Templates das Feld nutzen              |
+| Sessions für Erstbesucher                    | ProcessWire startet immer eine Session | Ja, solange kein Bedarf besteht ([Sessions ohne Cookie für Erstbesucher](#sessions-ohne-cookie-für-erstbesucher))                                                          | Nein, das Session-Cookie steht in der Cookie-Übersicht |
 
 ### Checkliste vor dem Livegang
 
@@ -629,16 +697,16 @@ Nach Rollen verteilt. Die technischen Prüfungen stehen im [Abnahmeprotokoll](#a
 
 Rolle: Entwicklung.
 
-| Prüfung                     | Vorgehen                                                         | Erwartung                                                                             |
-| --------------------------- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| Ohne Zustimmung             | Website im privaten Fenster öffnen, nichts anklicken             | Hinweis erscheint, nur Session-Cookie (`wire` oder `wires`), kein `cmnstr`            |
-| Netzwerk vor der Zustimmung | Entwicklerwerkzeuge, Tab „Netzwerk“, neu laden                   | Keine Requests an Drittanbieter (Google, Matomo, YouTube usw.)                        |
+| Prüfung                     | Vorgehen                                                         | Erwartung                                                                                                                   |
+| --------------------------- | ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| Ohne Zustimmung             | Website im privaten Fenster öffnen, nichts anklicken             | Hinweis erscheint, nur Session-Cookie (`wire` oder `wires`), kein `cmnstr`                                                  |
+| Netzwerk vor der Zustimmung | Entwicklerwerkzeuge, Tab „Netzwerk“, neu laden                   | Keine Requests an Drittanbieter (Google, Matomo, YouTube usw.)                                                              |
 | Mit Zustimmung              | „Alle akzeptieren“                                               | Seite lädt neu (mit **Ohne Neuladen freischalten** nicht), Hinweis weg, `cmnstr` gesetzt, Tracking-Codes und Masken greifen |
-| Ablehnen und Ändern         | „Alle ablehnen“, dann Dialog über den Footer-Link öffnen         | Auswahl änderbar, löschbare Cookies abgelehnter Dienste fehlen                        |
-| Ohne JavaScript             | JavaScript ausschalten, neu laden                                | Hinweis erscheint, Buttons senden, Footer-Link öffnet den Dialog (`?cmnstr-settings`) |
-| Tastatur                    | Nur Tab, Umschalt+Tab, Enter, Leertaste                          | Fokus immer sichtbar, alle Buttons und Checkboxen erreichbar                          |
-| 200 % Zoom                  | Browser-Zoom auf 200 %                                           | Hinweis und Dialog bedienbar, nichts abgeschnitten                                    |
-| Dialog schließen            | Dialog über den Footer-Link öffnen, mit Schließen-Button beenden | Fokus kehrt zum öffnenden Element zurück                                              |
+| Ablehnen und Ändern         | „Alle ablehnen“, dann Dialog über den Footer-Link öffnen         | Auswahl änderbar, löschbare Cookies abgelehnter Dienste fehlen                                                              |
+| Ohne JavaScript             | JavaScript ausschalten, neu laden                                | Hinweis erscheint, Buttons senden, Footer-Link öffnet den Dialog (`?cmnstr-settings`)                                       |
+| Tastatur                    | Nur Tab, Umschalt+Tab, Enter, Leertaste                          | Fokus immer sichtbar, alle Buttons und Checkboxen erreichbar                                                                |
+| 200 % Zoom                  | Browser-Zoom auf 200 %                                           | Hinweis und Dialog bedienbar, nichts abgeschnitten                                                                          |
+| Dialog schließen            | Dialog über den Footer-Link öffnen, mit Schließen-Button beenden | Fokus kehrt zum öffnenden Element zurück                                                                                    |
 
 ### Betrieb
 
@@ -822,7 +890,9 @@ $keys = $cmnstr->getUnlockedCategories();
 getGoogleConsentStates(): array<string, string>
 ```
 
-Liefert die sieben Consent-Mode-v2-Typen mit `granted` oder `denied` (Zuordnung zu Kategorien: [Google Tag Manager anbinden](#google-tag-manager-anbinden)). Beispiel bei Zustimmung nur zu den Statistik-Cookies: `analytics_storage` und `security_storage` sind `granted`, die fünf übrigen `denied`.
+Liefert die sieben Consent-Mode-v2-Typen mit dem Zustand des Besuchers (`granted` oder `denied`), wie im `update` ([Google Consent Mode](#google-consent-mode)). Beispiel bei Zustimmung nur zu `statistics-ga`, die Mess-ID `G-…` freischaltet: `analytics_storage` und `security_storage` sind `granted`, die fünf übrigen `denied`.
+
+Dazu passend: `getGoogleConsentDefaults()` liefert die Werte für `default` (alles `denied` außer `security_storage`), `getServiceStates()` den Zustand je Dienst wie im dataLayer (`['statistics' => ['ga' => 'granted'], …]`, ohne `decided`).
 
 #### maskContent
 
@@ -941,24 +1011,27 @@ Cookies:
 
 Tracking:
 
-| Schlüssel                                                                                                                                                                                         | Oberfläche                                      | Typ, Werte                               | Standard   |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- | ---------------------------------------- | ---------- |
-| `ga_property_id`                                                                                                                                                                                  | Google Analytics: **Mess-ID**                   | Text                                     | leer       |
-| `gtm_id`                                                                                                                                                                                          | Google Tag Manager: **Container-ID**            | Text                                     | leer       |
-| `matomo_enabled`                                                                                                                                                                                  | **Matomo-Tracking aktivieren**                  | bool                                     | `false`    |
-| `matomo_url`                                                                                                                                                                                      | **Matomo-URL**                                  | URL                                      | leer       |
-| `matomo_siteid`                                                                                                                                                                                   | **Website-ID**                                  | Ziffern                                  | `1`        |
-| `matomo_cookieless`                                                                                                                                                                               | **Cookieloses Tracking**                        | `''` (aus), `fallback`, `cookieless`     | `''`       |
-| `matomo_sharetracking`                                                                                                                                                                            | **Subdomains gemeinsam tracken**                | bool                                     | `false`    |
-| `matomo_sharedomain`                                                                                                                                                                              | **Gemeinsame Domain**                           | Domain                                   | leer       |
-| `matomo_documenttitle`                                                                                                                                                                            | **Fester Dokumenttitel**                        | Text                                     | leer       |
-| `meta_pixel_id`                                                                                                                                                                                   | Meta Pixel: **Pixel-ID**                        | Text                                     | leer       |
-| `meta_pixel_event`                                                                                                                                                                                | **Event beim Seitenaufruf**                     | Text                                     | `PageView` |
-| `linkedin_insight_id`                                                                                                                                                                             | LinkedIn Insight Tag: **Partner-ID**            | Text                                     | leer       |
-| `microsoft_uet_id`                                                                                                                                                                                | Microsoft Advertising UET: **UET-Tag-ID**       | Text                                     | leer       |
-| `openai_pixel_id`                                                                                                                                                                                 | ChatGPT Ads Pixel: **Pixel-ID**                 | Text                                     | leer       |
-| `ga_cookie_service`, `gtm_cookie_service`, `matomo_cookie_service`, `meta_pixel_cookie_service`, `linkedin_insight_cookie_service`, `microsoft_uet_cookie_service`, `openai_pixel_cookie_service` | **Erforderliche Zustimmung** je Code            | Liste von Schlüsseln, optional mit `any` | leer       |
-| `google_site_verification`                                                                                                                                                                        | **Google Search Console**: **Bestätigungscode** | Text                                     | leer       |
+| Schlüssel                                                                                                                                                                                                                                                   | Oberfläche                                      | Typ, Werte                               | Standard   |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- | ---------------------------------------- | ---------- |
+| `ga_property_id`                                                                                                                                                                                                                                            | Google Analytics: **Mess-ID**                   | Text                                     | leer       |
+| `google_ads_id`                                                                                                                                                                                                                                             | Google Ads: **Conversion-ID**                   | Text                                     | leer       |
+| `google_ads_remarketing`                                                                                                                                                                                                                                    | Google Ads: **Remarketing**                     | Liste von Schlüsseln                     | leer       |
+| `floodlight_id`                                                                                                                                                                                                                                             | Floodlight: **Advertiser-ID**                   | Text                                     | leer       |
+| `gtm_id`                                                                                                                                                                                                                                                    | Google Tag Manager: **Container-ID**            | Text                                     | leer       |
+| `matomo_enabled`                                                                                                                                                                                                                                            | **Matomo-Tracking aktivieren**                  | bool                                     | `false`    |
+| `matomo_url`                                                                                                                                                                                                                                                | **Matomo-URL**                                  | URL                                      | leer       |
+| `matomo_siteid`                                                                                                                                                                                                                                             | **Website-ID**                                  | Ziffern                                  | `1`        |
+| `matomo_cookieless`                                                                                                                                                                                                                                         | **Cookieloses Tracking**                        | `''` (aus), `fallback`, `cookieless`     | `''`       |
+| `matomo_sharetracking`                                                                                                                                                                                                                                      | **Subdomains gemeinsam tracken**                | bool                                     | `false`    |
+| `matomo_sharedomain`                                                                                                                                                                                                                                        | **Gemeinsame Domain**                           | Domain                                   | leer       |
+| `matomo_documenttitle`                                                                                                                                                                                                                                      | **Fester Dokumenttitel**                        | Text                                     | leer       |
+| `meta_pixel_id`                                                                                                                                                                                                                                             | Meta Pixel: **Pixel-ID**                        | Text                                     | leer       |
+| `meta_pixel_event`                                                                                                                                                                                                                                          | **Event beim Seitenaufruf**                     | Text                                     | `PageView` |
+| `linkedin_insight_id`                                                                                                                                                                                                                                       | LinkedIn Insight Tag: **Partner-ID**            | Text                                     | leer       |
+| `microsoft_uet_id`                                                                                                                                                                                                                                          | Microsoft Advertising UET: **UET-Tag-ID**       | Text                                     | leer       |
+| `openai_pixel_id`                                                                                                                                                                                                                                           | ChatGPT Ads Pixel: **Pixel-ID**                 | Text                                     | leer       |
+| `ga_cookie_service`, `google_ads_cookie_service`, `floodlight_cookie_service`, `gtm_cookie_service`, `matomo_cookie_service`, `meta_pixel_cookie_service`, `linkedin_insight_cookie_service`, `microsoft_uet_cookie_service`, `openai_pixel_cookie_service` | **Erforderliche Zustimmung** je Code            | Liste von Schlüsseln, optional mit `any` | leer       |
+| `google_site_verification`                                                                                                                                                                                                                                  | **Google Search Console**: **Bestätigungscode** | Text                                     | leer       |
 
 Sicherheits-Header und Protokoll:
 
@@ -1011,7 +1084,7 @@ $modules->saveConfig('CookieMonster', $data);
 ```
 
 - Format: `*_cookies` ist ein Text im Zeilenformat aus dem [Schnellstart](#banner-prüfen-und-ersten-dienst-eintragen), Zeilen durch `\n` getrennt. `*_cookie_service` ist eine Liste von Schlüsseln, bei mehreren steht `any` als erster Eintrag für ODER, sonst gilt UND ([UND und ODER](#mehrere-dienste-und-und-oder)).
-- Keine Validierung: `saveConfig()` prüft weder Auswahlwerte (z. B. `hsts_max_age`) noch Muster der Formularfelder (z. B. Mess-ID `G-…`, `AW-…`, `DC-…`, `UA-…`). Ungültige Werte fallen erst im Betrieb auf.
+- Keine Validierung: `saveConfig()` prüft weder Auswahlwerte (z. B. `hsts_max_age`) noch Muster der Formularfelder (z. B. Mess-ID `G-…`). Ungültige Werte fallen erst im Betrieb auf.
 - Ganzes Array: Es ersetzt die gesamte Konfiguration, nicht genannte Schlüssel gehen verloren, wenn es ohne `getConfig()` entsteht. `saveConfig('CookieMonster', 'schlüssel', $wert)` ändert nur diesen Schlüssel, `null` entfernt ihn.
 - Interne Marker: `consent_epoch` nicht ändern. Fehlt oder sinkt der Wert, gelten ältere Entscheidungen wieder, eine neue Epoche fragt alle Besucher neu ([Glossar](#glossar)). `config_hash` und `config_snapshot` ebenfalls nicht ändern.
 - Verlauf: `saveConfig()` löst den Hook `Modules::saveConfig` aus. Das Modul berechnet den Hash neu und schreibt bei Änderungen eine Zeile in `cookiemonster-config` (nicht bei „Kein Logging“), siehe [Verlauf der Konfiguration](#verlauf-der-konfiguration).
@@ -1164,7 +1237,7 @@ Die Banner- und Masken-Formulare senden per `POST` an `/_cmnstr/consent` (`Cooki
 | `cmnstr-once`                 | Nur Masken, siehe [Einmal laden](#einmal-laden)                                                                                                                                                                                                    |
 | `cmnstr-redirect`             | Adresse für die Weiterleitung                                                                                                                                                                                                                      |
 | `cmnstr-lang`                 | Sprach-ID für die Statusmeldungen und Texte                                                                                                                                                                                                        |
-| `cmnstr-referrer`             | `document.referrer` der Seite, auf der entschieden wurde ([Herkunft (Referrer) nach der Zustimmung](#herkunft-referrer-nach-der-zustimmung))                                                                                                      |
+| `cmnstr-referrer`             | `document.referrer` der Seite, auf der entschieden wurde ([Herkunft (Referrer) nach der Zustimmung](#herkunft-referrer-nach-der-zustimmung))                                                                                                       |
 
 Antwort: `303` auf `cmnstr-redirect`. Mit `Accept: application/json` (so sendet `CookieMonster.live.js`) antwortet der Endpunkt stattdessen mit JSON:
 
@@ -1177,11 +1250,12 @@ Antwort: `303` auf `cmnstr-redirect`. Mit `Accept: application/json` (so sendet 
 	"once": [],
 	"tags": ["addGATrackingCode"],
 	"consentMode": { "analytics_storage": "granted", "…": "denied" },
+	"dataLayer": { "decided": true, "statistics": { "ga": "granted" } },
 	"message": "…"
 }
 ```
 
-`reload` ist `true`, wenn vorher Freigegebenes jetzt gesperrt ist (Widerruf), `tags` nennt die Methoden der freigegebenen Tracking-Codes, `message` die Statusmeldung.
+`reload` ist `true`, wenn vorher Freigegebenes jetzt gesperrt ist (Widerruf), `tags` nennt die Methoden der freigegebenen Tracking-Codes, `dataLayer` den [Consent-Status im dataLayer](#consent-status-im-datalayer), `message` die Statusmeldung.
 
 Der Endpunkt `/_cmnstr/report` (`CookieMonster::REPORT_PATH`) nimmt CSP-Berichte entgegen, siehe [Security-Header](#security-header).
 
@@ -1417,7 +1491,7 @@ Markup in `templates/`: `banner.php` (Hinweis und Dialog), `mask.php` (Inhaltsma
 Der Code erscheint nur in vollständig gerenderten Seiten (`<head>`, `</body>`) und mit passender Zustimmung. Prüfen:
 
 1. Hat die Kategorie (z. B. **Statistik-Cookies**) mindestens einen Dienst mit Zeile `---ID|…` und ist **Kategorie im Cookie-Banner anbieten** an? Ohne Dienst lädt der Code nie.
-2. Ist die ID gültig? Die Mess-ID von Google Analytics muss zum Muster `G-…`, `AW-…`, `DC-…` oder `UA-…` passen.
+2. Ist die ID gültig? Google Analytics: `G-…`, Google Ads: `AW-…`, Floodlight: `DC-…`.
 3. Passt **Erforderliche Zustimmung**? Leer gilt Statistik (Google Analytics, Google Tag Manager, Matomo) bzw. Marketing (Meta Pixel, LinkedIn Insight Tag, Microsoft Advertising UET, ChatGPT Ads Pixel). Bei mehreren Diensten entscheidet [UND oder ODER](#mehrere-dienste-und-und-oder).
 4. Hat der Besucher allen Diensten der Kategorie zugestimmt? Das Cookie `cmnstr` zeigt es (DevTools → Anwendung → Cookies). Bei aktivem GPC sind die betroffenen Kategorien abgelehnt.
 5. Läuft die Seite durch PHP? Seiten aus einem Full-Page-Cache und Teil-Renderings erhalten keine Codes, siehe [Bekannte Grenzen](#bekannte-grenzen).
@@ -1440,6 +1514,26 @@ Der Code erscheint nur in vollständig gerenderten Seiten (`<head>`, `</body>`) 
 5. Liegt die Seite im Template-Cache? Dort bleibt eine alte Maske stehen. Die Option **Template-Cache beibehalten** ausschalten.
 6. Unterdrückt GPC die Zustimmung? Bei aktivem Signal gelten betroffene Kategorien nach pauschaler Zustimmung als abgelehnt.
 7. Stammt das Cookie aus einer älteren Version? Cookies mit anderer Schema-Version gelten als nicht vorhanden, der Banner fragt neu.
+
+## Upgrade auf 4.7.0
+
+Rolle: Betrieb und Tracking.
+
+Das Upgrade läuft nach dem Einspielen der Dateien über **Module** → **Refresh**. Von 4.5 oder älter: zuerst [Upgrade auf 4.6.0](#upgrade-auf-460) lesen, beide Upgrades laufen in einem Schritt.
+
+Der Banner fragt danach alle Besucher neu (neue Consent-Epoche durch den Versionswechsel). Bis sie entschieden haben, fehlen sie in Statistik und Conversion-Messung: Das Update nicht kurz vor Kampagnen oder Auswertungen einspielen und die Tracking-Verantwortlichen vorab informieren.
+
+Neu: Der [Google Consent Mode](#google-consent-mode) folgt jetzt Googles Muster `default` (immer `denied`) und `update` (Zustand des Besuchers) und richtet sich nach der Zustimmung zu Google Analytics bzw. zu den Google-Diensten im Tag Manager, nicht mehr nach vollständig zugestimmten Kategorien. Dazu kommt der [Consent-Status im dataLayer](#consent-status-im-datalayer) mit dem Event `cmnstr_consent`.
+
+Mit Tag Manager geben Google Analytics, Google Ads und Floodlight ihre Typen nach ihrer **Erforderlichen Zustimmung** unter **Google-Dienste** frei, auch ohne ID. Leer gilt die ganze Kategorie (Statistik bzw. Marketing).
+
+Zu tun:
+
+1. Mit Tag Manager: auf [Google Tag Manager anbinden](#google-tag-manager-anbinden) umstellen. Nicht allein im Backend umstellen, sondern mit der Person abstimmen, die den Container betreut. Bis der Container umgestellt ist, bleibt der Dienst `gtm` stehen: Wird er vorher entfernt, gibt er nichts mehr frei und die Tags mit Bedingung auf ihn feuern nicht mehr.
+    1. Container (Tracking): Jedes Tag an `cmnstr.<kategorie>.<dienst>` der neuen Dienste binden und die Version vorbereiten, noch nicht veröffentlichen. Bisherige Bedingungen auf Consent-Typen (_Zusätzliche Einwilligung erforderlich_) können bleiben, ersetzen die Bindung an den Dienst aber nicht.
+    2. Backend (Betrieb): Den Dienst `gtm` durch die Dienste der Tags ersetzen (Beschreibungen nennen den Tag Manager), **Erforderliche Zustimmung** mit ODER auf diese Dienste setzen und unter **Google-Dienste** je Produkt die **Erforderliche Zustimmung** wählen (ID leer lassen). Besucher, die bisher nur `gtm` zugestimmt hatten, fragt der Banner nach den neuen Diensten.
+    3. Container (Tracking): Direkt danach die Version veröffentlichen und im Tag Assistant prüfen, dass die Google-Typen nach Zustimmung auf `granted` stehen.
+2. Datenschutzerklärung prüfen: Sie muss den Tag Manager nennen.
 
 ## Upgrade auf 4.6.0
 

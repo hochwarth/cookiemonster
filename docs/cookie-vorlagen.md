@@ -26,16 +26,17 @@ Rolle: Betreiber und Redaktion. Diese Vorlagen ergänzen die [README](../README.
 - [Statistik-Cookies](#statistik-cookies)
     - [Matomo](#vorlage-matomo)
     - [Google Analytics 4](#vorlage-google-analytics-4)
-    - [Google Tag Manager (Statistik)](#vorlage-google-tag-manager-statistik)
+    - [Google Analytics 4 (über Google Tag Manager)](#vorlage-google-analytics-4-gtm)
     - [Microsoft Clarity](#vorlage-microsoft-clarity)
 - [Marketing-Cookies](#marketing-cookies)
-    - [Google Tag Manager (Marketing) / Google Ads](#vorlage-google-tag-manager-marketing-google-ads)
+    - [Google Ads (über Google Tag Manager)](#vorlage-google-ads-gtm)
     - [Meta Pixel (Facebook/Instagram)](#vorlage-meta-pixel-facebook-instagram)
     - [LinkedIn Insight Tag](#vorlage-linkedin-insight-tag)
     - [TikTok Pixel](#vorlage-tiktok-pixel)
     - [Microsoft Advertising UET (Bing, Copilot)](#vorlage-microsoft-advertising-uet-bing-copilot)
     - [ChatGPT Ads Pixel (OpenAI)](#vorlage-chatgpt-ads-pixel-openai)
     - [Snapchat Pixel](#vorlage-snapchat-pixel)
+- [Über den Google Tag Manager](#über-den-google-tag-manager)
 - [Externe Inhalte](#externe-inhalte)
     - [YouTube](#vorlage-youtube)
     - [Vimeo](#vorlage-vimeo)
@@ -57,7 +58,7 @@ _Stand: November 2026. Die Einträge stammen aus den Cookie-Richtlinien der Anbi
 - **Dynamische Namen** stehen als Muster mit `*`, z.B. `_ga_*` für `_ga_ABC123XYZ` oder `_pk_id.*` für `_pk_id.1.a1b2`. Ohne `*` greift das Löschen nur bei exakt gleichem Namen.
 - **Kein Cookie:** Einträge mit `localStorage`, `sessionStorage` oder `IndexedDB` als Dauer sind Browser-Speicher. Er ist ebenso einwilligungspflichtig (§ 25 TDDDG), kann serverseitig aber nicht gelöscht werden. Wie die Dauer gelesen wird, steht unter [Dauer und Speichertyp](../README.md#dauer-und-speichertyp).
 - **Browser-Grenzen:** Chrome und Firefox kürzen jede Cookie-Laufzeit auf höchstens 400 Tage (getestet mit Chrome 154 und Firefox 156, gemäß [RFC 6265bis](https://httpwg.org/http-extensions/draft-ietf-httpbis-rfc6265bis.html)); WebKit unterstützt dieselbe Grenze, Safari kürzt per JavaScript gesetzte Cookies (ITP) zudem auf 7 Tage. Angaben über 400 Tage (z.B. „2 Jahre“ bei `_ga`) sind deshalb als 400 Tage eingetragen; der Hinweis unter dem Feld erinnert daran.
-- **Jeder Name nur einmal je Kategorie:** In verschiedenen Kategorien darf derselbe Name stehen (z.B. `_ga` beim GTM unter Statistik und unter Marketing): Das Cookie bleibt erhalten, sobald einem der Dienste zugestimmt wurde. Wird GA4 über den Tag Manager geladen, nur die GTM-Gruppe eintragen, nicht zusätzlich die GA4-Gruppe.
+- **Jeder Name nur einmal je Kategorie:** In verschiedenen Kategorien darf derselbe Name stehen: Das Cookie bleibt erhalten, sobald einem der Dienste zugestimmt wurde. Wird GA4 über den Tag Manager geladen, die Gruppe „Google Analytics 4 (über Google Tag Manager)“ statt „Google Analytics 4“ eintragen.
 
 ## Notwendige Cookies
 
@@ -153,21 +154,21 @@ Cloudflare Turnstile setzt `cf_clearance` nur mit „Pre-Clearance“ (standardm
 </details>
 
 - GA4 setzt standardmäßig nur `_ga` und `_ga_<Mess-ID>`. Die Laufzeit ist in der GA4-Verwaltung einstellbar (sofort bis 25 Monate) und verlängert sich standardmäßig bei jedem Besuch.
-- Ist die Property mit Google Ads verknüpft und `ad_storage` = `granted`, setzt das Google-Tag zusätzlich die `_gcl_*`-Cookies (siehe Google Ads) – mit CookieMonster also nur nach Zustimmung zu den Marketing-Cookies.
+- Ist die Property mit Google Ads verknüpft und `ad_storage` = `granted`, setzt das Google-Tag zusätzlich die `_gcl_*`-Cookies (siehe Google Ads) – mit CookieMonster also nur nach Zustimmung zu einem Google-Ads-Dienst (z.B. Google Ads über den Tag Manager).
 - `_gid` und `_gat` stammen aus dem eingestellten Universal Analytics und werden von GA4 nicht mehr gesetzt.
-- Ohne Zustimmung (Consent Mode v2: `analytics_storage` = `denied`) liest und schreibt das Tag keine Cookies. Wird es trotzdem geladen (z.B. im GTM-Container wegen einer Marketing-Zustimmung), sendet es cookielose Pings an Google.
+- Ohne Zustimmung (Consent Mode v2: `analytics_storage` = `denied`) liest und schreibt das Tag keine Cookies. Für die Person, die den Tag Manager betreut: Wird das Tag trotzdem geladen (im Container ohne Bedingung auf `cmnstr.statistics.ga`), sendet es cookielose Pings an Google.
 - Beim serverseitigen Tagging mit vom Server verwalteter Client-ID kommen `FPID` (2 Jahre, im Browser höchstens 400 Tage) und `FPLC` (20 Stunden) hinzu.
 
-<details id="vorlage-google-tag-manager-statistik">
-	<summary>Google Tag Manager (Statistik)</summary>
+<details id="vorlage-google-analytics-4-gtm">
+	<summary>Google Analytics 4 (über Google Tag Manager)</summary>
 
-    ---gtm|Google Tag Manager|Über den Google Tag Manager werden – je nachdem, welchen Kategorien Sie zustimmen – Statistik- und/oder Marketing-Tags von Google geladen (u. a. Google Analytics sowie Google Ads, Conversion Linker). Der Tag Manager selbst setzt keine Cookies und überträgt nur die Daten, denen Sie tatsächlich zugestimmt haben.|Wir nutzen den Google Tag Manager u. a. zur statistischen Auswertung der Websitenutzung.
+    ---ga|Google Analytics|Google Analytics erfasst das Nutzungsverhalten auf dieser Website und überträgt die Daten an Google, um uns Statistiken über Besucher und deren Verhalten bereitzustellen. Dieser Dienst wird über den Google Tag Manager (Google Ireland Limited) geladen. Schon beim Laden erhält Google Ihre IP-Adresse, auch in den USA.|
     _ga|beispiel.de|Speichert eine zufällige Client-ID, um Besucher voneinander zu unterscheiden.|400 Tage
     _ga_*|beispiel.de|Speichert den Sitzungsstatus (Sitzungs-ID, Anzahl der Sitzungen, Zeitstempel).|400 Tage
 
 </details>
 
-Die Cookie-Zeilen hängen von den Tags im Container ab – hier ein Container mit GA4. Dass gtm.js selbst keine Cookies setzt, ist beobachtet; Google sagt es nicht ausdrücklich. Weitere Tags (z.B. Microsoft Clarity) mit ihren Cookies ergänzen.
+Wie die Vorlage „Google Analytics 4“, der Text nennt zusätzlich den Tag Manager ([Über den Google Tag Manager](#über-den-google-tag-manager)). Den Dienst auch unter **Tracking** → **Google-Dienste** → **Google Analytics** als **Erforderliche Zustimmung** wählen (Mess-ID leer).
 
 <details id="vorlage-microsoft-clarity">
 	<summary>Microsoft Clarity</summary>
@@ -185,10 +186,10 @@ Die Cookie-Zeilen hängen von den Tags im Container ab – hier ein Container mi
 
 ## Marketing-Cookies
 
-<details id="vorlage-google-tag-manager-marketing-google-ads">
-	<summary>Google Tag Manager (Marketing) / Google Ads</summary>
+<details id="vorlage-google-ads-gtm">
+	<summary>Google Ads (über Google Tag Manager)</summary>
 
-    ---gtm|Google Tag Manager|Über den Google Tag Manager werden – je nachdem, welchen Kategorien Sie zustimmen – Statistik- und/oder Marketing-Tags von Google geladen (u. a. Google Analytics sowie Google Ads, Conversion Linker). Der Tag Manager selbst setzt keine Cookies und überträgt nur die Daten, denen Sie tatsächlich zugestimmt haben.|Wir nutzen den Google Tag Manager zur Steuerung von Marketing- und Conversion-Tracking.
+    ---googleads|Google Ads|Google Ads misst, ob Besucher über unsere Google-Anzeigen zu uns kommen und z.B. eine Anfrage senden. Außerdem kann Google Ihnen danach auf anderen Websites unsere Werbung zeigen (Remarketing). Bei Zustimmung findet ein Datenaustausch mit Google statt. Dieser Dienst wird über den Google Tag Manager (Google Ireland Limited) geladen. Schon beim Laden erhält Google Ihre IP-Adresse, auch in den USA.|Wir nutzen Google Ads zur Erfolgsmessung unserer Google-Anzeigen.
     _gcl_au|beispiel.de|Conversion Linker: Speichert eine pseudonyme Kennung, um Conversions Google-Ads-Kampagnen zuzuordnen.|90 Tage
     _gcl_aw|beispiel.de|Speichert die Google-Ads-Klick-ID (gclid) aus der Anzeigen-URL zur Conversion-Zuordnung.|90 Tage
     _gcl_gs|beispiel.de|Speichert Klickinformationen aus Google-Anzeigen für die Conversion-Messung.|90 Tage
@@ -201,7 +202,8 @@ Die Cookie-Zeilen hängen von den Tags im Container ab – hier ein Container mi
 
 </details>
 
-- Der Container lädt die Ads-Tags nur mit `ad_storage` = `granted`; die `_gcl_*`-Cookies entstehen erst nach Zustimmung (bzw. `_gcl_aw`/`_gcl_gb`/`_gcl_dc` nur nach einem Anzeigenklick). Statt einzelner Zeilen löscht auch `_gcl_*` alle Varianten (Google führt zusätzlich `_gcl_ag`, `_gcl_gf`, `_gcl_ha`, je 90 Tage).
+- Unter **Google-Dienste** → **Google Ads** als **Erforderliche Zustimmung** wählen (Conversion-ID leer), mit Remarketing auch bei **Remarketing**. Die `_gcl_*`-Cookies entstehen erst nach Zustimmung (bzw. `_gcl_aw`/`_gcl_gb`/`_gcl_dc` nur nach einem Anzeigenklick). Statt einzelner Zeilen löscht auch `_gcl_*` alle Varianten (Google führt zusätzlich `_gcl_ag`, `_gcl_gf`, `_gcl_ha`, je 90 Tage).
+- Mit Enhanced Conversions (gehashte E-Mail-Adresse o. Ä. an Google) die Beschreibung ergänzen, z.B.: „Bei Anfragen übermitteln wir Ihre E-Mail-Adresse verschlüsselt (gehasht) an Google, um sie Anzeigenklicks zuzuordnen.“
 - `IDE` gilt im EWR, in der Schweiz und im UK 13 Monate, sonst 24. Die doubleclick.net-Cookies sind Third-Party: Safari und Firefox blockieren sie standardmäßig, Chrome lässt sie weiter zu.
 - `__gads`/`__gpi` setzen AdSense bzw. Google Ad Manager beim Ausspielen von Anzeigen, nicht das Conversion-Tracking.
 - Beim serverseitigen Tagging (First-Party-Modus) kommen `FPID` (2 Jahre, im Browser höchstens 400 Tage), `FPLC` (20 Stunden) sowie `FPAU`/`FPGCLAW`/`FPGCLGB`/`FPGCLGS`/`FPGCLDC`/`FPGSID` (je 90 Tage) hinzu.
@@ -291,6 +293,19 @@ Laut OpenAI setzt das Pixel beide Cookies nur mit Zustimmung; `__oppref` gilt 30
 </details>
 
 Namen und Laufzeiten stammen aus der Snap-Cookie-Liste und der Conversions-API-Doku (First-Party-`_scid`). Cookie-Datenbanken nennen zusätzlich `_scid_r` auf der eigenen Domain (inoffiziell, Laufzeit unbekannt) – im Browser prüfen und ggf. ergänzen.
+
+## Über den Google Tag Manager
+
+Der Tag Manager bekommt keine eigene Gruppe ([Google Tag Manager anbinden](../README.md#google-tag-manager-anbinden)). Jeder Dienst, dessen Tag im Container läuft, trägt stattdessen diesen Satz am Ende seiner Beschreibung:
+
+    Dieser Dienst wird über den Google Tag Manager (Google Ireland Limited) geladen. Schon beim Laden erhält Google Ihre IP-Adresse, auch in den USA.
+
+- Für Google Analytics und Google Ads gibt es fertige Vorlagen ([Google Analytics 4 (über Google Tag Manager)](#vorlage-google-analytics-4-gtm), [Google Ads (über Google Tag Manager)](#vorlage-google-ads-gtm)). Bei anderen Vorlagen (z.B. Meta Pixel, Microsoft Clarity) den Satz an die Beschreibung anhängen, also vor den letzten senkrechten Strich der Zeile `---`:
+
+      ---meta|Meta Pixel|<Beschreibung aus der Vorlage> Dieser Dienst wird über den Google Tag Manager (Google Ireland Limited) geladen. Schon beim Laden erhält Google Ihre IP-Adresse, auch in den USA.|<Zweck aus der Vorlage>
+
+- Unter **Tracking** → **Google-Dienste** bei den Produkten nur Google-Dienste wählen (`ga` bei **Google Analytics**, `googleads` bei **Google Ads**), keine anderen.
+- Dass gtm.js selbst keine Cookies setzt, ist beobachtet; Google sagt es nicht ausdrücklich.
 
 ## Externe Inhalte
 
