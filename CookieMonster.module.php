@@ -88,6 +88,11 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
     private const CONFIG_HASH_LENGTH = 12;
 
     /**
+     * Älteste noch gültige Cookie-Version (gleiche Struktur seit 4.4.0, `_t` seit 4.6.0).
+     */
+    private const MIN_COOKIE_VERSION = '4.4.0';
+
+    /**
      * Danach wird der Snapshot beim Protokollieren einer Einwilligung erneut geschrieben (Lücke durch Pruning).
      */
     private const CONFIG_SNAPSHOT_REFRESH = 30 * 24 * 60 * 60;
@@ -370,7 +375,7 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
     }
 
     /**
-     * Setzt bei einem Versionswechsel die Consent-Epoche (`consent_epoch`); der Wiederholungslauf aus ready() mit gleicher Version ändert sie nicht.
+     * Setzt bei einem Versionswechsel die Consent-Epoche (`consent_epoch`), nur mit `renew_consent_on_upgrade`; der Wiederholungslauf aus ready() mit gleicher Version ändert sie nicht.
      *
      * @param int|string $fromVersion
      * @param int|string $toVersion
@@ -393,7 +398,7 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
                 $this->setMigrationMarker($this->_('Der Upgrade-Lauf wurde nicht abgeschlossen (Zeitlimit oder Speicher).'));
             }
 
-            if ((string) $fromVersion !== (string) $toVersion) {
+            if ((string) $fromVersion !== (string) $toVersion && (bool) $this->get('renew_consent_on_upgrade')) {
                 $this->setConsentEpoch();
             }
 
@@ -1392,9 +1397,9 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
 
     private function isCurrentCookieVersion(mixed $cookieValues): bool
     {
-        // Neuere Versionen (z.B. von einer anderen Subdomain) nicht zurückmigrieren
+        // Nur das Schema zählt, eine erneute Abfrage nach Updates regelt die Consent-Epoche
         return \is_array($cookieValues) &&
-            \version_compare($this->normalizeVersion($cookieValues['_version'] ?? 0), $this->getModuleVersion(), '>=');
+            \version_compare($this->normalizeVersion($cookieValues['_version'] ?? 0), $this->normalizeVersion(self::MIN_COOKIE_VERSION), '>=');
     }
 
     /**
@@ -1405,8 +1410,14 @@ class CookieMonster extends WireData implements Module, ConfigurableModule
     private function isConsentSuperseded(array $cookieValues): bool
     {
         $issuedAt = (int) ($cookieValues['_t'] ?? 0);
+        $epoch = (int) $this->get('consent_epoch');
 
-        return $issuedAt <= 0 || $issuedAt < (int) $this->get('consent_epoch');
+        // Cookies vor 4.6.0 haben kein `_t`, nur eine gesetzte Epoche macht sie ungültig
+        if ($issuedAt <= 0) {
+            return $epoch > 0;
+        }
+
+        return $issuedAt < $epoch;
     }
 
     private function isUsableConsent(mixed $cookieValues): bool

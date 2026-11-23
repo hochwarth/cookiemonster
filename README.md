@@ -17,7 +17,7 @@ Banner, Assets und Tracking-Codes landen automatisch in jeder vollständig geren
 
 | Angabe      | Wert               |
 | ----------- | ------------------ |
-| Status      | Version 4.7.0      |
+| Status      | Version 4.7.1      |
 | PHP         | 8.2 oder neuer     |
 | ProcessWire | 3.0.229 oder neuer |
 
@@ -45,6 +45,7 @@ Einstieg: [Schnellstart](#schnellstart). Betrieb und Redaktion: [Aufgaben](#aufg
 - [Bekannte Grenzen](#bekannte-grenzen)
 - [Entwickler](#entwickler)
 - [Fehlersuche](#fehlersuche)
+- [Upgrade auf 4.7.1](#upgrade-auf-471)
 - [Upgrade auf 4.7.0](#upgrade-auf-470)
 - [Upgrade auf 4.6.0](#upgrade-auf-460)
 
@@ -121,7 +122,7 @@ Jedes Element mit der Klasse `cmnstr-button-edit` öffnet den Einstellungsdialog
 
 | Rolle                    | Einmalig                                                                                          | Laufend                                                                        | Bei Updates                                                                                         |
 | ------------------------ | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------- |
-| Betrieb / Projektleitung | Banner, Texte, Dienste, Tracking-Codes einrichten, Aufbewahrung festlegen, Standardwerte prüfen   | Neue Dienste eintragen, Cookie-Listen aktuell halten, Banner-Texte archivieren | Upgrade-Hinweise lesen, Tracking-Zuordnung prüfen (der Banner fragt nach jedem Versionswechsel neu) |
+| Betrieb / Projektleitung | Banner, Texte, Dienste, Tracking-Codes einrichten, Aufbewahrung festlegen, Standardwerte prüfen   | Neue Dienste eintragen, Cookie-Listen aktuell halten, Banner-Texte archivieren | Upgrade-Hinweise lesen, Tracking-Zuordnung prüfen (nach einem Versionswechsel fragt der Banner nur mit **Einwilligung bei Modul-Update erneuern** neu) |
 | Redaktion                | Cookie-Übersicht und Textbaustein in die Datenschutzerklärung einfügen                            | Einbettungen einem Dienst zuordnen                                             | –                                                                                                   |
 | Entwicklung              | Modul installieren, Footer-Link, Masken und eigene Tracking-Codes einbauen, Header und CSP prüfen | Log `cookiemonster` beobachten                                                 | Templates und Scripts anpassen (`cmnstr_service`, Nonce)                                            |
 | Datenschutz              | Texte, Einstufung der Dienste, Aufbewahrung, Rechtsgrundlage prüfen                               | Änderungen an Diensten und Texten prüfen                                       | Neue Einstellungen und Textbausteine prüfen                                                         |
@@ -172,7 +173,7 @@ Der Schlüssel eines Dienstes besteht aus Kategorie und Dienst-ID, z. B. `extern
 | Hinweis                | Der Banner mit dem kurzen Text („Hinweistext“) und den Buttons.                                                                                                                                |
 | Inhaltsmaske           | Platzhalter an der Stelle eines blockierten Inhalts (Texte im Bereich **Inhaltsmaske für blockierte Inhalte**).                                                                                |
 | Consent-Cookie         | HttpOnly-Cookie `cmnstr` mit der Entscheidung.                                                                                                                                                 |
-| Epoche                 | Zeitpunkt, vor dem gespeicherte Entscheidungen nicht mehr gelten. Jede Versionsänderung setzt ihn neu (der Banner fragt alle erneut), Änderungen an Einstellungen, Texten oder Diensten nicht. |
+| Epoche                 | Zeitpunkt, vor dem gespeicherte Entscheidungen nicht mehr gelten. Ein Versionswechsel setzt ihn nur mit **Einwilligung bei Modul-Update erneuern** neu (der Banner fragt dann alle erneut), Änderungen an Einstellungen, Texten oder Diensten nicht. |
 | Consent-ID             | Zufällige Kennung im Consent-Cookie bei aktivem Einwilligungsprotokoll.                                                                                                                        |
 | Einwilligungsprotokoll | Log `cookiemonster-consent` mit Consent-ID, Zeitpunkt und Auswahl.                                                                                                                             |
 | GPC, DNT               | Browser-Signale „Global Privacy Control“ und „Do Not Track“, standardmäßig aus.                                                                                                                |
@@ -715,7 +716,7 @@ Rolle: Betrieb und Entwicklung.
 - Logs: `cookiemonster` (Warnungen, z. B. `null`-Werte, nicht gesendete Header) und `cookiemonster-report` (CSP-Verstöße) in `site/assets/logs` regelmäßig ansehen.
 - Backup: Das Einwilligungsprotokoll `cookiemonster-consent` in `site/assets/logs` gehört ins Backup. Die Frist legt der Betreiber fest ([Einwilligungsprotokoll](#einwilligungsprotokoll)), LazyCron löscht täglich, aber nur bei Seitenaufrufen.
 - Auskunft: Zeilen zur genannten Consent-ID im Protokoll heraussuchen (Format: [Consent-Statistik](#consent-statistik)).
-- Nach Updates: Der Banner fragt alle Besucher neu, Tracking-Zuordnung prüfen ([Upgrade auf 4.6.0](#upgrade-auf-460)).
+- Nach Updates: Tracking-Zuordnung prüfen, mit **Einwilligung bei Modul-Update erneuern** fragt der Banner alle Besucher neu ([Upgrade auf 4.6.0](#upgrade-auf-460)).
 
 ## Rechtliche Grenzen und Verantwortung
 
@@ -773,7 +774,7 @@ Zweck: Prozess- und Konfigurationsnachweis, welche Texte (auch frühere), Katego
 - **Cache:** Hash, Snapshot und Zeitpunkt der letzten Protokollierung liegen in der Modul-Konfiguration (`config_hash`, `config_snapshot`, `config_logged_at`). Neu berechnet werden sie beim Speichern der Konfiguration (Hook `Modules::saveConfig`, im Admin wie per `saveConfig()`) und beim Upgrade, nicht bei jedem Request und nicht bei Änderungen direkt in der Datenbank.
 - **Log `cookiemonster-config`:** Ändert sich der Hash, schreibt das Modul eine Zeile mit Zeit, Hash, Art (`initial`, `change`), Modulversion, vollständigem Snapshot (JSON, einzeilig) und Diff zum vorigen Stand (geänderte Schlüssel mit `old`/`new`, Texte auf 500 Zeichen gekürzt). Speichern ohne relevante Änderung (z. B. nur Security-Header) schreibt nichts. Der erste Snapshot entsteht beim ersten Einwilligungs-Log nach der Einführung oder beim nächsten Speichern.
 - **Pruning-Lücke:** Das Log wird mit derselben Frist gelöscht wie das Einwilligungsprotokoll (Aufbewahrung plus 180 Tage). Damit ein Hash in alten Einwilligungen auflösbar bleibt, schreibt das Modul beim Protokollieren den aktuellen Snapshot erneut (`refresh`), wenn der letzte Eintrag älter als 30 Tage ist.
-- **Cookie und Consent-Log:** Der Hash steht als `_c` im Cookie und als `cfg=…` in der Logzeile. Ein geänderter Hash macht Einwilligungen nicht ungültig. Nach jedem Versionswechsel (neue Epoche) gibt es eine neue Consent-ID, Statistiken können bis zum Ablauf der alten Logzeilen Besucher doppelt zählen.
+- **Cookie und Consent-Log:** Der Hash steht als `_c` im Cookie und als `cfg=…` in der Logzeile. Ein geänderter Hash macht Einwilligungen nicht ungültig. Nach einer neuen Epoche (Versionswechsel mit **Einwilligung bei Modul-Update erneuern**) gibt es eine neue Consent-ID, Statistiken können bis zum Ablauf der alten Logzeilen Besucher doppelt zählen.
 - **Anzeige:** Tab **Statistik**, **Verlauf der Konfiguration**: die letzten 50 Änderungen mit Zeit, Hash und geänderten Feldern (alt → neu), escaped, ohne Snapshot-Erneuerungen. Das Log enthält Konfigurationstexte, keine personenbezogenen Daten (kein Benutzer, keine URL, keine IP). Texte sollen keine personenbezogenen Angaben enthalten.
 - **Grenzen:** Kein Verlauf vor der Einführung. Nach dem Löschen (Frist) ist der Stand nur noch über den Hash belegt. Nie gespeicherte Standardwerte stehen nicht im Snapshot und erscheinen als Änderung, sobald sie gespeichert werden. Der Verlauf belegt den Konfigurationsstand, nicht die ausgelieferte Seite (Templates, CSS, Übersetzungen außerhalb der Modul-Konfiguration).
 
@@ -818,7 +819,7 @@ Nicht abgedeckt: Kontrast eigener Farben und Schriften (Custom Properties), Bann
 - Security-Header: Nicht bei AJAX (`X-Requested-With`), an Endpunkt-Antworten und an direkt vom Webserver ausgelieferten Dateien. Hat die Ausgabe schon begonnen, entfallen sie (Zeile im Log `cookiemonster`).
 - Sessions: ProcessWire startet die Session vor jedem Modul, Besucher erhalten deshalb ein Session-Cookie ([Sessions ohne Cookie für Erstbesucher](#sessions-ohne-cookie-für-erstbesucher)).
 - Cookies von Anbietern, mit anderem `path` als `/` und Browser-Speicher kann der Server nicht löschen ([Löschen ohne Zustimmung](#löschen-ohne-zustimmung)).
-- Neue Abfrage: Nach jedem Versionswechsel fragt der Banner alle Besucher erneut (neue Epoche, [Glossar](#glossar)), Statistiken zählen bis zum Ablauf der alten Logzeilen doppelt.
+- Neue Abfrage: Mit **Einwilligung bei Modul-Update erneuern** fragt der Banner nach jedem Versionswechsel alle Besucher erneut (neue Epoche, [Glossar](#glossar)), Statistiken zählen bis zum Ablauf der alten Logzeilen doppelt.
 - Banner aus: Das Verhalten ohne Banner ([Abschalten und deinstallieren](#abschalten-und-deinstallieren)) ist aus dem Code abgeleitet, nicht im Browser getestet.
 - `Permissions-Policy`: Laut [MDN-Kompatibilitätsdaten](https://developer.mozilla.org/docs/Web/HTTP/Reference/Headers/Permissions-Policy) wertet nur Chromium den Header aus.
 
@@ -1213,7 +1214,7 @@ Der Server speichert die Entscheidung im Cookie `cmnstr` (HttpOnly, SameSite=Lax
 
 | Schlüssel  | Bedeutung                                                                                                                                                                                                                                                                                                                                                                                    |
 | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `_version` | Schema-Version. Sie entspricht der Modulversion als Text (`4.6.0`) und wird mit `version_compare()` verglichen, jeder Teil darf beliebig groß sein. Frühere Builds speicherten die Version ohne Punkte als Ganzzahl; sie wird wie bei ProcessWire gelesen (`Modules::formatVersion()`): erste Ziffer Major, zweite Minor, der Rest Patch (`460` bedeutet `4.6.0`, `1234` bedeutet `1.2.34`). |
+| `_version` | Schema-Version. Sie entspricht der Modulversion als Text (`4.6.0`) und wird mit `version_compare()` verglichen, jeder Teil darf beliebig groß sein. Gültig sind Cookies ab Schema-Version `4.4.0`. Frühere Builds speicherten die Version ohne Punkte als Ganzzahl; sie wird wie bei ProcessWire gelesen (`Modules::formatVersion()`): erste Ziffer Major, zweite Minor, der Rest Patch (`460` bedeutet `4.6.0`, `1234` bedeutet `1.2.34`). |
 | `_id`      | Consent-ID. Bei „Kein Logging“ fehlt sie.                                                                                                                                                                                                                                                                                                                                                    |
 | `_t`       | Zeitpunkt der Entscheidung.                                                                                                                                                                                                                                                                                                                                                                  |
 | `_r`       | Zeitpunkt der letzten Erneuerung des Ablaufs.                                                                                                                                                                                                                                                                                                                                                |
@@ -1513,7 +1514,19 @@ Der Code erscheint nur in vollständig gerenderten Seiten (`<head>`, `</body>`) 
 4. Liefert `$page->cmnstr_service` den Wert `null`? Dann steuert **Fehlendes Dienst-Feld** das Verhalten, und das Log `cookiemonster` enthält eine Warnung.
 5. Liegt die Seite im Template-Cache? Dort bleibt eine alte Maske stehen. Die Option **Template-Cache beibehalten** ausschalten.
 6. Unterdrückt GPC die Zustimmung? Bei aktivem Signal gelten betroffene Kategorien nach pauschaler Zustimmung als abgelehnt.
-7. Stammt das Cookie aus einer älteren Version? Cookies mit anderer Schema-Version gelten als nicht vorhanden, der Banner fragt neu.
+7. Stammt das Cookie aus einer älteren Version? Cookies vor Schema-Version 4.4.0 gelten als nicht vorhanden, der Banner fragt neu. Dasselbe gilt für Entscheidungen vor der Consent-Epoche.
+
+## Upgrade auf 4.7.1
+
+Rolle: Betrieb.
+
+Das Upgrade läuft nach dem Einspielen der Dateien über **Module** → **Refresh**. Von 4.6.0 oder älter: zuerst [Upgrade auf 4.7.0](#upgrade-auf-470) lesen, die Upgrades laufen in einem Schritt.
+
+Neu: Ein Versionswechsel fragt Besucher nicht mehr automatisch neu. Die Consent-Epoche wird nur gesetzt, wenn unter **Statistik** die Option **Einwilligung bei Modul-Update erneuern** aktiv ist (Standard: aus). Das gilt schon für dieses Upgrade, auch direkt von 4.6.0. Entscheidungen ab 4.4.0 bleiben gültig. Cookies ohne Zeitpunkt `_t` (4.4 und 4.5) gelten nur, solange keine Consent-Epoche gesetzt ist. Neue Dienste fragt der Banner wie bisher nach.
+
+Zu tun:
+
+1. Prüfen, ob das Update Zwecke oder Datenweitergaben ändert. Wenn ja, die Option vor dem Refresh einschalten.
 
 ## Upgrade auf 4.7.0
 

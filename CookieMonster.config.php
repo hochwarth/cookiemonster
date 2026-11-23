@@ -1197,6 +1197,14 @@ $config = [
                 'value' => '1095',
             ],
             [
+                'name' => 'renew_consent_on_upgrade',
+                'type' => 'checkbox',
+                'label' => __('Einwilligung bei Modul-Update erneuern'),
+                'label2' => __('Nach einem Versionswechsel alle Besucher erneut fragen (neue Consent-Epoche)'),
+                'notes' => __('Aus (Standard): Entscheidungen ab Version 4.4.0 bleiben über Updates hinweg gültig. Neue Dienste fragt der Banner trotzdem nach. Einschalten, wenn ein Update Zwecke oder Datenweitergaben ändert.'),
+                'value' => false,
+            ],
+            [
                 'type' => 'markup',
                 'name' => 'consent_stats_output',
                 'label' => __('Consent-Statistik'),
